@@ -628,6 +628,44 @@ Routers added: %4</source>
     </message>
 </context>
 <context>
+    <name>CaCertificateDialog</name>
+    <message>
+        <location filename="../host/ui/ca_certificate_dialog.ui" line="14"/>
+        <source>CA Certificate</source>
+        <translation>Сертификат CA</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ca_certificate_dialog.ui" line="20"/>
+        <source>Paste the certificate of the certificate authority that signed the certificate of the directory server, in PEM form (-----BEGIN CERTIFICATE-----). Leave the box empty to use the certificates the system trusts.</source>
+        <translation>Вставьте сертификат удостоверяющего центра, подписавшего сертификат серверу каталога, в формате PEM (-----BEGIN CERTIFICATE-----). Оставьте поле пустым, чтобы использовать сертификаты, которым доверяет система.</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ca_certificate_dialog.ui" line="39"/>
+        <source>Load from file...</source>
+        <translation>Загрузить из файла...</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ca_certificate_dialog.cc" line="65"/>
+        <source>Open</source>
+        <translation type="unfinished">Открыть</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ca_certificate_dialog.cc" line="65"/>
+        <source>Certificate files (*.pem *.crt *.cer);;All files (*)</source>
+        <translation>Файлы сертификатов (*.pem *.crt *.cer);;Все файлы (*)</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ca_certificate_dialog.cc" line="74"/>
+        <source>Unable to open the file.</source>
+        <translation>Не удалось открыть файл.</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ca_certificate_dialog.cc" line="105"/>
+        <source>The text does not hold a certificate in PEM form. It begins with &quot;-----BEGIN CERTIFICATE-----&quot;.</source>
+        <translation>Текст не содержит сертификата в формате PEM. Он начинается с &quot;-----BEGIN CERTIFICATE-----&quot;.</translation>
+    </message>
+</context>
+<context>
     <name>ChangePasswordDialog</name>
     <message>
         <location filename="../host/ui/change_password_dialog.ui" line="14"/>
@@ -1123,17 +1161,17 @@ Routers added: %4</source>
         <translation>Сессия запущена.</translation>
     </message>
     <message>
-        <location filename="../client/desktop/client_window.cc" line="563"/>
+        <location filename="../client/desktop/client_window.cc" line="590"/>
         <source>The specified router is unavailable.</source>
         <translation>Указанный маршрутизатор недоступен.</translation>
     </message>
     <message>
-        <location filename="../client/desktop/client_window.cc" line="565"/>
+        <location filename="../client/desktop/client_window.cc" line="592"/>
         <source>The data of the router is damaged. Edit the router and enter it again.</source>
         <translation>Данные маршрутизатора повреждены. Измените маршрутизатор и введите их заново.</translation>
     </message>
     <message>
-        <location filename="../client/desktop/client_window.cc" line="567"/>
+        <location filename="../client/desktop/client_window.cc" line="594"/>
         <source>The specified router is offline.</source>
         <translation>Указанный маршрутизатор не в сети.</translation>
     </message>
@@ -1168,17 +1206,17 @@ Routers added: %4</source>
         <translation>Попытка подключения в режиме совместимости...</translation>
     </message>
     <message>
-        <location filename="../client/desktop/client_window.cc" line="574"/>
+        <location filename="../client/desktop/client_window.cc" line="601"/>
         <source>Requesting connection to the host...</source>
         <translation>Запрашивается подключение к хосту...</translation>
     </message>
     <message>
-        <location filename="../client/desktop/client_window.cc" line="582"/>
+        <location filename="../client/desktop/client_window.cc" line="609"/>
         <source>Connection offer received.</source>
         <translation>Получено предложение на подключение.</translation>
     </message>
     <message>
-        <location filename="../client/desktop/client_window.cc" line="599"/>
+        <location filename="../client/desktop/client_window.cc" line="626"/>
         <source>Error requesting connection via router.</source>
         <translation>Ошибка при запросе соединения через маршрутизатор.</translation>
     </message>
@@ -1328,123 +1366,128 @@ Routers added: %4</source>
         <translation>Отклонять подключение</translation>
     </message>
     <message>
-        <location filename="../host/ui/config_dialog.cc" line="484"/>
+        <location filename="../host/ui/config_dialog.cc" line="487"/>
         <source>Are you sure you want to delete user &quot;%1&quot;?</source>
         <translation>Вы действительно хотите удалить пользователя &quot;%1&quot;?</translation>
     </message>
     <message>
-        <location filename="../host/ui/config_dialog.cc" line="512"/>
-        <location filename="../host/ui/config_dialog.cc" line="546"/>
+        <location filename="../host/ui/config_dialog.cc" line="515"/>
+        <location filename="../host/ui/config_dialog.cc" line="549"/>
         <source>An error occurred while processing the password.</source>
         <translation>Возникла ошибка при обработке пароля.</translation>
     </message>
     <message>
-        <location filename="../host/ui/config_dialog.cc" line="529"/>
+        <location filename="../host/ui/config_dialog.cc" line="532"/>
         <source>Settings storage is unavailable.</source>
         <translation>Хранилище настроек недоступно.</translation>
     </message>
     <message>
         <location filename="../host/ui/config_dialog.ui" line="244"/>
-        <location filename="../host/ui/config_dialog.cc" line="560"/>
+        <location filename="../host/ui/config_dialog.cc" line="563"/>
         <source>Import</source>
         <translation>Импорт</translation>
     </message>
     <message>
-        <location filename="../host/ui/config_dialog.cc" line="560"/>
-        <location filename="../host/ui/config_dialog.cc" line="577"/>
+        <location filename="../host/ui/config_dialog.cc" line="563"/>
+        <location filename="../host/ui/config_dialog.cc" line="580"/>
         <source>JSON-files (*.json)</source>
         <translation>JSON-файлы (*.json)</translation>
     </message>
     <message>
         <location filename="../host/ui/config_dialog.ui" line="251"/>
-        <location filename="../host/ui/config_dialog.cc" line="577"/>
-        <location filename="../host/ui/config_dialog.cc" line="602"/>
-        <location filename="../host/ui/config_dialog.cc" line="637"/>
+        <location filename="../host/ui/config_dialog.cc" line="580"/>
+        <location filename="../host/ui/config_dialog.cc" line="605"/>
+        <location filename="../host/ui/config_dialog.cc" line="640"/>
         <source>Export</source>
         <translation>Экспорт</translation>
     </message>
     <message>
-        <location filename="../host/ui/config_dialog.cc" line="602"/>
+        <location filename="../host/ui/config_dialog.cc" line="605"/>
         <source>MSI-files (*.msi)</source>
         <translation>MSI-файлы (*.msi)</translation>
     </message>
     <message>
-        <location filename="../host/ui/config_dialog.cc" line="612"/>
+        <location filename="../host/ui/config_dialog.cc" line="615"/>
         <source>The installer was successfully exported.</source>
         <translation>Установщик успешно экспортирован.</translation>
     </message>
     <message>
-        <location filename="../host/ui/config_dialog.cc" line="616"/>
+        <location filename="../host/ui/config_dialog.cc" line="619"/>
         <source>The installed host package was not found.</source>
         <translation>Установленный пакет хоста не найден.</translation>
     </message>
     <message>
-        <location filename="../host/ui/config_dialog.cc" line="620"/>
+        <location filename="../host/ui/config_dialog.cc" line="623"/>
         <source>The installed version of the host does not support exporting the installer.</source>
         <translation>Установленная версия хоста не поддерживает экспорт установщика.</translation>
     </message>
     <message>
-        <location filename="../host/ui/config_dialog.cc" line="624"/>
+        <location filename="../host/ui/config_dialog.cc" line="627"/>
         <source>Unable to export the installer.</source>
         <translation>Не удалось экспортировать установщик.</translation>
     </message>
     <message>
-        <location filename="../host/ui/config_dialog.cc" line="637"/>
+        <location filename="../host/ui/config_dialog.cc" line="640"/>
         <source>Executable files (*.exe)</source>
         <translation>Исполняемые файлы (*.exe)</translation>
     </message>
     <message>
-        <location filename="../host/ui/config_dialog.cc" line="647"/>
+        <location filename="../host/ui/config_dialog.cc" line="650"/>
         <source>The portable version was successfully exported.</source>
         <translation>Портативная версия успешно экспортирована.</translation>
     </message>
     <message>
-        <location filename="../host/ui/config_dialog.cc" line="651"/>
+        <location filename="../host/ui/config_dialog.cc" line="654"/>
         <source>The portable version works only through a router. Set up the connection to the router and save the settings.</source>
         <translation>Портативная версия работает только через маршрутизатор. Настройте подключение к маршрутизатору и сохраните параметры.</translation>
     </message>
     <message>
-        <location filename="../host/ui/config_dialog.cc" line="655"/>
+        <location filename="../host/ui/config_dialog.cc" line="658"/>
         <source>Unable to export the portable version.</source>
         <translation>Не удалось экспортировать портативную версию.</translation>
     </message>
     <message>
-        <location filename="../host/ui/config_dialog.cc" line="676"/>
+        <location filename="../host/ui/config_dialog.cc" line="679"/>
         <source>The configuration can not be written. Make sure that you have sufficient rights to write.</source>
         <translation>Конфигурация не может быть записана. Проверьте имеются ли у вас достаточные права для записи.</translation>
     </message>
     <message>
-        <location filename="../host/ui/config_dialog.cc" line="692"/>
+        <location filename="../host/ui/config_dialog.cc" line="695"/>
         <source>An invalid update server address was entered.</source>
         <translation>Был введен неверный адрес сервера обновлений.</translation>
     </message>
     <message>
-        <location filename="../host/ui/config_dialog.cc" line="700"/>
+        <location filename="../host/ui/config_dialog.cc" line="703"/>
         <source>Enter the update server address.</source>
         <translation>Введите адрес сервера обновлений.</translation>
     </message>
     <message>
-        <location filename="../host/ui/config_dialog.cc" line="710"/>
+        <location filename="../host/ui/config_dialog.cc" line="713"/>
         <source>An invalid public key was entered.</source>
         <translation>Введен некорректный публичный ключ.</translation>
     </message>
     <message>
-        <location filename="../host/ui/config_dialog.cc" line="722"/>
+        <location filename="../host/ui/config_dialog.cc" line="725"/>
         <source>Incorrect router address entered.</source>
         <translation>Введен некорректный адрес маршрутизатора.</translation>
     </message>
     <message>
-        <location filename="../host/ui/config_dialog.cc" line="732"/>
+        <location filename="../host/ui/config_dialog.cc" line="735"/>
         <source>Incorrect router public key entered.</source>
         <translation>Введен некорректный публичный ключ маршрутизатора.</translation>
     </message>
     <message>
-        <location filename="../host/ui/config_dialog.cc" line="895"/>
+        <location filename="../host/ui/config_dialog.cc" line="776"/>
+        <source>Unable to save the LDAP settings.</source>
+        <translation>Не удалось сохранить настройки LDAP.</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/config_dialog.cc" line="904"/>
         <source>Install</source>
         <translation>Установить</translation>
     </message>
     <message>
-        <location filename="../host/ui/config_dialog.cc" line="900"/>
+        <location filename="../host/ui/config_dialog.cc" line="909"/>
         <source>Remove</source>
         <translation>Удалить</translation>
     </message>
@@ -1620,17 +1663,22 @@ Routers added: %4</source>
         <translation>Проверить обновления</translation>
     </message>
     <message>
-        <location filename="../host/ui/config_dialog.ui" line="662"/>
+        <location filename="../host/ui/config_dialog.ui" line="648"/>
+        <source>LDAP</source>
+        <translation>LDAP</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/config_dialog.ui" line="672"/>
         <source>Add</source>
         <translation>Добавить</translation>
     </message>
     <message>
-        <location filename="../host/ui/config_dialog.ui" line="671"/>
+        <location filename="../host/ui/config_dialog.ui" line="681"/>
         <source>Modify</source>
         <translation>Изменить</translation>
     </message>
     <message>
-        <location filename="../host/ui/config_dialog.ui" line="680"/>
+        <location filename="../host/ui/config_dialog.ui" line="690"/>
         <source>Delete</source>
         <translation>Удалить</translation>
     </message>
@@ -1788,32 +1836,36 @@ Password: %2</source>
         </translation>
     </message>
     <message>
-        <location filename="../client/desktop/credentials/credential_dialog.cc" line="87"/>
         <source>The user name can not be empty and can contain only alphabet characters, numbers and &quot;_&quot;, &quot;-&quot;, &quot;.&quot; characters.</source>
-        <translation>Имя пользователя не может быть пустым и может содержать только буквы, цифры и символы &quot;_&quot;, &quot;-&quot;, &quot;.&quot; .</translation>
+        <translation type="vanished">Имя пользователя не может быть пустым и может содержать только буквы, цифры и символы &quot;_&quot;, &quot;-&quot;, &quot;.&quot; .</translation>
     </message>
     <message>
-        <location filename="../client/desktop/credentials/credential_dialog.cc" line="96"/>
+        <location filename="../client/desktop/credentials/credential_dialog.cc" line="86"/>
+        <source>An invalid user name was entered.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../client/desktop/credentials/credential_dialog.cc" line="94"/>
         <source>Password cannot be empty.</source>
         <translation>Пароль не может быть пустым.</translation>
     </message>
     <message>
-        <location filename="../client/desktop/credentials/credential_dialog.cc" line="114"/>
+        <location filename="../client/desktop/credentials/credential_dialog.cc" line="112"/>
         <source>Unable to add credentials</source>
         <translation>Не удалось добавить учетные данные</translation>
     </message>
     <message>
-        <location filename="../client/desktop/credentials/credential_dialog.cc" line="125"/>
+        <location filename="../client/desktop/credentials/credential_dialog.cc" line="123"/>
         <source>Unable to modify credentials</source>
         <translation>Не удалось изменить учетные данные</translation>
     </message>
     <message>
-        <location filename="../client/desktop/credentials/credential_dialog.cc" line="145"/>
+        <location filename="../client/desktop/credentials/credential_dialog.cc" line="143"/>
         <source>Failed to read the credentials.</source>
         <translation>Не удалось прочитать учетные данные.</translation>
     </message>
     <message>
-        <location filename="../client/desktop/credentials/credential_dialog.cc" line="157"/>
+        <location filename="../client/desktop/credentials/credential_dialog.cc" line="155"/>
         <source>The credentials are damaged. Enter them again.</source>
         <translation>Учетные данные повреждены. Введите их заново.</translation>
     </message>
@@ -4119,6 +4171,515 @@ Credentials replaced: %2</source>
     </message>
 </context>
 <context>
+    <name>LdapBindTestDialog</name>
+    <message>
+        <location filename="../host/ui/ldap_bind_test_dialog.ui" line="14"/>
+        <source>Check Login</source>
+        <translation>Проверка входа</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_bind_test_dialog.ui" line="20"/>
+        <source>The login is looked up in the directory and then bound with the password, exactly as a connection attempt would.</source>
+        <translation>Логин ищется в каталоге, а затем выполняется привязка с паролем — так же, как при попытке подключения.</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_bind_test_dialog.ui" line="32"/>
+        <source>Login:</source>
+        <translation>Логин:</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_bind_test_dialog.ui" line="42"/>
+        <source>Password:</source>
+        <translation type="unfinished">Пароль:</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_bind_test_dialog.ui" line="56"/>
+        <source>Check</source>
+        <translation>Проверить</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_bind_test_dialog.cc" line="63"/>
+        <source>Enter the login to check.</source>
+        <translation>Укажите логин для проверки.</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_bind_test_dialog.cc" line="71"/>
+        <source>Checking...</source>
+        <translation>Проверка...</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_bind_test_dialog.cc" line="85"/>
+        <source>The bind succeeded. The password is correct.</source>
+        <translation>Привязка выполнена. Пароль верен.</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_bind_test_dialog.cc" line="86"/>
+        <source>The bind succeeded (%1). The password is correct.</source>
+        <translation>Привязка выполнена (%1). Пароль верен.</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_bind_test_dialog.cc" line="92"/>
+        <source>The login was not found in the directory.</source>
+        <translation>Логин не найден в каталоге.</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_bind_test_dialog.cc" line="96"/>
+        <source>The bind failed (code %1: %2).</source>
+        <translation>Привязка не удалась (код %1: %2).</translation>
+    </message>
+</context>
+<context>
+    <name>LdapDirectoryQuery</name>
+    <message>
+        <location filename="../host/ldap_directory_query.cc" line="105"/>
+        <source>Set the server and the user base DN first.</source>
+        <translation>Сначала укажите сервер и Base DN пользователей.</translation>
+    </message>
+    <message>
+        <location filename="../host/ldap_directory_query.cc" line="114"/>
+        <source>The user filter has to contain %1 for the login.</source>
+        <translation>Фильтр пользователей должен содержать %1 для логина.</translation>
+    </message>
+    <message>
+        <location filename="../host/ldap_directory_query.cc" line="132"/>
+        <source>Could not reach the directory: %1</source>
+        <translation>Не удалось связаться с каталогом: %1</translation>
+    </message>
+    <message>
+        <location filename="../host/ldap_directory_query.cc" line="180"/>
+        <source>The service bind failed (code %1: %2).</source>
+        <translation>Привязка служебной учётной записи не удалась (код %1: %2).</translation>
+    </message>
+    <message>
+        <location filename="../host/ldap_directory_query.cc" line="356"/>
+        <source>The search failed (code %1: %2).</source>
+        <translation>Поиск не удался (код %1: %2).</translation>
+    </message>
+</context>
+<context>
+    <name>LdapMappingDialog</name>
+    <message>
+        <location filename="../host/ui/ldap_mapping_dialog.ui" line="14"/>
+        <source>Mapping Properties</source>
+        <translation>Свойства сопоставления</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_mapping_dialog.ui" line="22"/>
+        <source>Name:</source>
+        <translation type="unfinished">Имя:</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_mapping_dialog.ui" line="32"/>
+        <source>Select...</source>
+        <translation>Выбрать...</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_mapping_dialog.ui" line="41"/>
+        <source>Allowed Session Types:</source>
+        <translation type="unfinished">Разрешенные типы сессий:</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_mapping_dialog.ui" line="58"/>
+        <source>Check all</source>
+        <translation type="unfinished">Отметить все</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_mapping_dialog.ui" line="84"/>
+        <source>Uncheck all</source>
+        <translation type="unfinished">Снять все отметки</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_mapping_dialog.cc" line="59"/>
+        <source>Group Mapping</source>
+        <translation>Сопоставление группы</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_mapping_dialog.cc" line="60"/>
+        <source>Group:</source>
+        <translation type="unfinished">Группа:</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_mapping_dialog.cc" line="64"/>
+        <source>User Mapping</source>
+        <translation>Сопоставление пользователя</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_mapping_dialog.cc" line="65"/>
+        <source>User:</source>
+        <translation>Пользователь:</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_mapping_dialog.cc" line="176"/>
+        <source>Enter the group name or choose it from the directory.</source>
+        <translation>Введите имя группы или выберите её из каталога.</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_mapping_dialog.cc" line="187"/>
+        <source>Enter the LDAP user name or choose it from the directory.</source>
+        <translation>Введите имя пользователя LDAP или выберите его из каталога.</translation>
+    </message>
+</context>
+<context>
+    <name>LdapSelectDialog</name>
+    <message>
+        <location filename="../host/ui/ldap_select_dialog.ui" line="14"/>
+        <source>Select</source>
+        <translation>Выбор</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_select_dialog.ui" line="22"/>
+        <source>Filter:</source>
+        <translation>Фильтр:</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_select_dialog.ui" line="51"/>
+        <location filename="../host/ui/ldap_select_dialog.cc" line="54"/>
+        <location filename="../host/ui/ldap_select_dialog.cc" line="59"/>
+        <source>Name</source>
+        <translation type="unfinished">Имя</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_select_dialog.ui" line="56"/>
+        <location filename="../host/ui/ldap_select_dialog.cc" line="54"/>
+        <source>Login</source>
+        <translation>Логин</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_select_dialog.cc" line="53"/>
+        <source>Select User</source>
+        <translation>Выбор пользователя</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_select_dialog.cc" line="58"/>
+        <source>Select Group</source>
+        <translation>Выбор группы</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_select_dialog.cc" line="59"/>
+        <source>Description</source>
+        <translation type="unfinished">Описание</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_select_dialog.cc" line="165"/>
+        <source>Select an entry from the list.</source>
+        <translation>Выберите запись из списка.</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_select_dialog.cc" line="206"/>
+        <source>Loading...</source>
+        <translation>Загрузка...</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_select_dialog.cc" line="214"/>
+        <source>No users found.</source>
+        <translation>Пользователи не найдены.</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_select_dialog.cc" line="215"/>
+        <source>No groups found.</source>
+        <translation>Группы не найдены.</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_select_dialog.cc" line="219"/>
+        <source>Shown: %1 of %2</source>
+        <translation>Показано: %1 из %2</translation>
+    </message>
+</context>
+<context>
+    <name>LdapWidget</name>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="9"/>
+        <source>Enable LDAP authentication</source>
+        <translation>Включить аутентификацию через LDAP</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="17"/>
+        <source>Connection</source>
+        <translation type="unfinished">Подключение</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="25"/>
+        <source>Server:</source>
+        <translation>Сервер:</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="35"/>
+        <source>Port:</source>
+        <translation>Порт:</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="55"/>
+        <source>Security:</source>
+        <translation>Безопасность:</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="65"/>
+        <source>Verify the server certificate</source>
+        <translation>Проверять сертификат сервера</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="75"/>
+        <source>CA certificate:</source>
+        <translation>Сертификат CA:</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="82"/>
+        <location filename="../host/ui/ldap_widget.cc" line="502"/>
+        <source>Not set</source>
+        <translation>Не задан</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="93"/>
+        <source>Test connection</source>
+        <translation>Проверить подключение</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="100"/>
+        <source>Check login...</source>
+        <translation>Проверить вход...</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="136"/>
+        <source>Bind / search</source>
+        <translation>Привязка и поиск</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="144"/>
+        <source>Bind DN:</source>
+        <translation>Bind DN:</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="154"/>
+        <source>Bind password:</source>
+        <translation>Пароль Bind:</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="164"/>
+        <source>User base DN:</source>
+        <translation>Base DN пользователей:</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="174"/>
+        <source>User filter (%1 - login):</source>
+        <translation>Фильтр пользователей (%1 — логин):</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="184"/>
+        <source>Login attribute:</source>
+        <translation>Атрибут логина:</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="196"/>
+        <source>Leave the bind DN empty to connect anonymously.</source>
+        <translation>Оставьте Bind DN пустым для анонимного подключения.</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="220"/>
+        <source>Groups</source>
+        <translation type="unfinished">Группы</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="228"/>
+        <source>Group base DN:</source>
+        <translation>Base DN групп:</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="238"/>
+        <source>Group filter:</source>
+        <translation>Фильтр групп:</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="248"/>
+        <source>Group name attribute:</source>
+        <translation>Атрибут имени группы:</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="258"/>
+        <source>Resolve nested groups (Active Directory)</source>
+        <translation>Разрешать вложенные группы (Active Directory)</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="277"/>
+        <source>Add new group</source>
+        <translation>Добавить группу</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="303"/>
+        <source>Edit group</source>
+        <translation>Изменить группу</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="329"/>
+        <source>Delete group</source>
+        <translation>Удалить группу</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="380"/>
+        <source>Group</source>
+        <translation type="unfinished">Группа</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="391"/>
+        <source>Users</source>
+        <translation type="unfinished">Пользователи</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="407"/>
+        <source>Add new user</source>
+        <translation type="unfinished">Добавить нового пользователя</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="433"/>
+        <source>Edit user</source>
+        <translation type="unfinished">Редактировать пользователя</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="459"/>
+        <source>Delete user</source>
+        <translation type="unfinished">Удалить пользователя</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="510"/>
+        <source>User</source>
+        <translation>Пользователь</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="521"/>
+        <source>Advanced</source>
+        <translation>Дополнительно</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="527"/>
+        <source>Rights when no mapping matches</source>
+        <translation>Права, когда нет совпадений</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="533"/>
+        <source>Desktop</source>
+        <translation type="unfinished">Рабочий стол</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="540"/>
+        <source>Terminal</source>
+        <translation type="unfinished">Терминал</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="547"/>
+        <source>Files</source>
+        <translation>Файлы</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="554"/>
+        <source>System</source>
+        <translation type="unfinished">Система</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="561"/>
+        <source>Chat</source>
+        <translation type="unfinished">Чат</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="571"/>
+        <source>Deny when no mapping matches (ignore the default rights)</source>
+        <translation>Запрещать доступ, когда нет совпадений (игнорировать права по умолчанию)</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="581"/>
+        <source>Fall back to a local account when LDAP cannot decide (LDAP preferred)</source>
+        <translation>Переходить на локальную учётную запись, когда LDAP не может решить (приоритет LDAP)</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="593"/>
+        <source>Cache the resolution for:</source>
+        <translation>Кэшировать результат на:</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.ui" line="606"/>
+        <source> seconds</source>
+        <translation> секунд</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.cc" line="76"/>
+        <source>No rights</source>
+        <translation>Нет прав</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.cc" line="108"/>
+        <source>StartTLS</source>
+        <translation>StartTLS</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.cc" line="109"/>
+        <source>LDAPS</source>
+        <translation>LDAPS</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.cc" line="110"/>
+        <source>None (not recommended)</source>
+        <translation>Нет (не рекомендуется)</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.cc" line="386"/>
+        <source>Are you sure you want to delete mapping &quot;%1&quot;?</source>
+        <translation>Вы действительно хотите удалить сопоставление &quot;%1&quot;?</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.cc" line="457"/>
+        <source>Add</source>
+        <translation type="unfinished">Добавить</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.cc" line="458"/>
+        <source>Edit</source>
+        <translation type="unfinished">Правка</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.cc" line="459"/>
+        <source>Delete</source>
+        <translation type="unfinished">Удалить</translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../host/ui/ldap_widget.cc" line="503"/>
+        <source>Set (%n characters)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.cc" line="525"/>
+        <location filename="../host/ui/ldap_widget.cc" line="575"/>
+        <source>LDAP Authentication</source>
+        <translation>Аутентификация LDAP</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.cc" line="525"/>
+        <source>Enter the server address.</source>
+        <translation>Укажите адрес сервера.</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.cc" line="550"/>
+        <source>The anonymous bind succeeded.</source>
+        <translation>Анонимная привязка выполнена.</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.cc" line="551"/>
+        <source>The service account bind succeeded.</source>
+        <translation>Привязка служебной учётной записи выполнена.</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.cc" line="555"/>
+        <source>The bind failed (code %1: %2).</source>
+        <translation>Привязка не удалась (код %1: %2).</translation>
+    </message>
+    <message>
+        <location filename="../host/ui/ldap_widget.cc" line="573"/>
+        <source>The connection timed out.</source>
+        <translation>Время ожидания подключения истекло.</translation>
+    </message>
+</context>
+<context>
     <name>LocalGroupDialog</name>
     <message>
         <location filename="../client/desktop/management/local_group_dialog.ui" line="14"/>
@@ -4337,7 +4898,7 @@ Credentials replaced: %2</source>
     </message>
     <message>
         <location filename="../client/desktop/management/local_host_dialog.ui" line="67"/>
-        <location filename="../client/desktop/management/local_host_dialog.cc" line="401"/>
+        <location filename="../client/desktop/management/local_host_dialog.cc" line="414"/>
         <source>Address:</source>
         <translation>Адрес:</translation>
     </message>
@@ -4362,12 +4923,17 @@ Credentials replaced: %2</source>
         <translation>Учетные данные:</translation>
     </message>
     <message>
-        <location filename="../client/desktop/management/local_host_dialog.ui" line="122"/>
+        <location filename="../client/desktop/management/local_host_dialog.ui" line="121"/>
+        <source>Forget the saved host key</source>
+        <translation>Забыть сохранённый ключ хоста</translation>
+    </message>
+    <message>
+        <location filename="../client/desktop/management/local_host_dialog.ui" line="132"/>
         <source>Comment:</source>
         <translation>Комментарий:</translation>
     </message>
     <message>
-        <location filename="../client/desktop/management/local_host_dialog.cc" line="264"/>
+        <location filename="../client/desktop/management/local_host_dialog.cc" line="274"/>
         <source>Without Router</source>
         <translation>Без маршрутизатора</translation>
     </message>
@@ -4382,12 +4948,17 @@ Credentials replaced: %2</source>
         <translation>Добавить хост</translation>
     </message>
     <message>
-        <location filename="../client/desktop/management/local_host_dialog.cc" line="372"/>
+        <location filename="../client/desktop/management/local_host_dialog.cc" line="176"/>
+        <source>An invalid user name was entered.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../client/desktop/management/local_host_dialog.cc" line="385"/>
         <source>&lt;deleted router&gt;</source>
         <translation>&lt;маршрутизатор удален&gt;</translation>
     </message>
     <message>
-        <location filename="../client/desktop/management/local_host_dialog.cc" line="331"/>
+        <location filename="../client/desktop/management/local_host_dialog.cc" line="341"/>
         <source>Local</source>
         <translation>Локальные</translation>
     </message>
@@ -4416,17 +4987,16 @@ Credentials replaced: %2</source>
         <translation>Введен недопустимый ID хоста.</translation>
     </message>
     <message>
-        <location filename="../client/desktop/management/local_host_dialog.cc" line="177"/>
         <source>The user name can not be empty and can contain only alphabet characters, numbers and &quot;_&quot;, &quot;-&quot;, &quot;.&quot; characters.</source>
-        <translation>Имя пользователя не может быть пустым и может содержать только буквы, цифры и символы &quot;_&quot;, &quot;-&quot;, &quot;.&quot; .</translation>
+        <translation type="vanished">Имя пользователя не может быть пустым и может содержать только буквы, цифры и символы &quot;_&quot;, &quot;-&quot;, &quot;.&quot; .</translation>
     </message>
     <message>
-        <location filename="../client/desktop/management/local_host_dialog.cc" line="186"/>
+        <location filename="../client/desktop/management/local_host_dialog.cc" line="184"/>
         <source>Enter both the user name and the password, or leave both empty.</source>
         <translation>Введите и имя пользователя, и пароль, либо оставьте оба поля пустыми.</translation>
     </message>
     <message numerus="yes">
-        <location filename="../client/desktop/management/local_host_dialog.cc" line="194"/>
+        <location filename="../client/desktop/management/local_host_dialog.cc" line="192"/>
         <source>Too long comment. The maximum length of the comment is %n characters.</source>
         <translation>
             <numerusform>Слишком длинный комментарий. Максимальная длина комментария %n символ.</numerusform>
@@ -4435,62 +5005,62 @@ Credentials replaced: %2</source>
         </translation>
     </message>
     <message>
-        <location filename="../client/desktop/management/local_host_dialog.cc" line="207"/>
+        <location filename="../client/desktop/management/local_host_dialog.cc" line="205"/>
         <source>Failed to read data from the local database.</source>
         <translation>Не удалось прочитать данные из локальной базы данных.</translation>
     </message>
     <message>
-        <location filename="../client/desktop/management/local_host_dialog.cc" line="216"/>
+        <location filename="../client/desktop/management/local_host_dialog.cc" line="214"/>
         <source>A host with this name already exists in the selected group.</source>
         <translation>Хост с таким именем уже существует в выбранной группе.</translation>
     </message>
     <message>
-        <location filename="../client/desktop/management/local_host_dialog.cc" line="240"/>
+        <location filename="../client/desktop/management/local_host_dialog.cc" line="250"/>
         <source>Unable to add host</source>
         <translation>Не удалось добавить хост</translation>
     </message>
     <message>
-        <location filename="../client/desktop/management/local_host_dialog.cc" line="250"/>
+        <location filename="../client/desktop/management/local_host_dialog.cc" line="260"/>
         <source>Unable to modify host</source>
         <translation>Не удалось изменить хост</translation>
     </message>
     <message>
-        <location filename="../client/desktop/management/local_host_dialog.cc" line="272"/>
+        <location filename="../client/desktop/management/local_host_dialog.cc" line="282"/>
         <source>Failed to read the list of routers.</source>
         <translation>Не удалось прочитать список маршрутизаторов.</translation>
     </message>
     <message>
-        <location filename="../client/desktop/management/local_host_dialog.cc" line="293"/>
+        <location filename="../client/desktop/management/local_host_dialog.cc" line="303"/>
         <source>Failed to read the list of credentials.</source>
         <translation>Не удалось прочитать список учетных данных.</translation>
     </message>
     <message>
-        <location filename="../client/desktop/management/local_host_dialog.cc" line="315"/>
+        <location filename="../client/desktop/management/local_host_dialog.cc" line="325"/>
         <source>Failed to read the list of groups.</source>
         <translation>Не удалось прочитать список групп.</translation>
     </message>
     <message>
-        <location filename="../client/desktop/management/local_host_dialog.cc" line="344"/>
+        <location filename="../client/desktop/management/local_host_dialog.cc" line="354"/>
         <source>Failed to retrieve host information from the local database.</source>
         <translation>Не удалось получить информацию о хосте из локальной базы данных.</translation>
     </message>
     <message>
-        <location filename="../client/desktop/management/local_host_dialog.cc" line="392"/>
+        <location filename="../client/desktop/management/local_host_dialog.cc" line="405"/>
         <source>The data of the host is damaged. Enter it again.</source>
         <translation>Данные хоста повреждены. Введите их заново.</translation>
     </message>
     <message>
-        <location filename="../client/desktop/management/local_host_dialog.cc" line="402"/>
+        <location filename="../client/desktop/management/local_host_dialog.cc" line="415"/>
         <source>Host name or IP address</source>
         <translation>Имя хоста или IP-адрес</translation>
     </message>
     <message>
-        <location filename="../client/desktop/management/local_host_dialog.cc" line="406"/>
+        <location filename="../client/desktop/management/local_host_dialog.cc" line="419"/>
         <source>ID:</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../client/desktop/management/local_host_dialog.cc" line="407"/>
+        <location filename="../client/desktop/management/local_host_dialog.cc" line="420"/>
         <source>Host ID</source>
         <translation>ID хоста</translation>
     </message>
@@ -4545,7 +5115,7 @@ Credentials replaced: %2</source>
     </message>
     <message>
         <location filename="../client/android/local_host_editor.cc" line="80"/>
-        <location filename="../client/android/local_host_editor.cc" line="365"/>
+        <location filename="../client/android/local_host_editor.cc" line="373"/>
         <source>Delete</source>
         <translation>Удалить</translation>
     </message>
@@ -4606,31 +5176,35 @@ Credentials replaced: %2</source>
     </message>
     <message>
         <location filename="../client/android/local_host_editor.cc" line="326"/>
-        <source>The user name can not be empty and can contain only alphabet characters, numbers and &quot;_&quot;, &quot;-&quot;, &quot;.&quot; characters.</source>
-        <translation>Имя пользователя не может быть пустым и может содержать только буквы, цифры и символы &quot;_&quot;, &quot;-&quot;, &quot;.&quot; .</translation>
+        <source>An invalid user name was entered.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../client/android/local_host_editor.cc" line="335"/>
+        <source>The user name can not be empty and can contain only alphabet characters, numbers and &quot;_&quot;, &quot;-&quot;, &quot;.&quot; characters.</source>
+        <translation type="vanished">Имя пользователя не может быть пустым и может содержать только буквы, цифры и символы &quot;_&quot;, &quot;-&quot;, &quot;.&quot; .</translation>
+    </message>
+    <message>
+        <location filename="../client/android/local_host_editor.cc" line="334"/>
         <source>Enter both the user name and the password, or leave both empty.</source>
         <translation>Введите и имя пользователя, и пароль, либо оставьте оба поля пустыми.</translation>
     </message>
     <message>
-        <location filename="../client/android/local_host_editor.cc" line="354"/>
+        <location filename="../client/android/local_host_editor.cc" line="362"/>
         <source>Failed to save the host.</source>
         <translation>Не удалось сохранить хост.</translation>
     </message>
     <message>
-        <location filename="../client/android/local_host_editor.cc" line="364"/>
+        <location filename="../client/android/local_host_editor.cc" line="372"/>
         <source>Delete Host</source>
         <translation>Удалить хост</translation>
     </message>
     <message>
-        <location filename="../client/android/local_host_editor.cc" line="365"/>
+        <location filename="../client/android/local_host_editor.cc" line="373"/>
         <source>Delete the host &quot;%1&quot;?</source>
         <translation>Удалить хост &quot;%1&quot;?</translation>
     </message>
     <message>
-        <location filename="../client/android/local_host_editor.cc" line="372"/>
+        <location filename="../client/android/local_host_editor.cc" line="380"/>
         <source>Failed to delete the host.</source>
         <translation>Не удалось удалить хост.</translation>
     </message>
@@ -8044,73 +8618,73 @@ Credentials imported: %5</source>
 <context>
     <name>SettingsUtil</name>
     <message>
-        <location filename="../host/settings_util.cc" line="314"/>
+        <location filename="../host/settings_util.cc" line="500"/>
         <source>The configuration was successfully imported.</source>
         <translation>Конфигурация успешно импортирована.</translation>
     </message>
     <message>
-        <location filename="../host/settings_util.cc" line="363"/>
+        <location filename="../host/settings_util.cc" line="549"/>
         <source>The configuration was successfully exported.</source>
         <translation>Конфигурация успешно экспортирована.</translation>
     </message>
     <message>
-        <location filename="../host/settings_util.cc" line="373"/>
+        <location filename="../host/settings_util.cc" line="559"/>
         <source>Warning</source>
         <translation>Предупреждение</translation>
     </message>
     <message>
-        <location filename="../host/settings_util.cc" line="271"/>
+        <location filename="../host/settings_util.cc" line="457"/>
         <source>Source settings file does not exist.</source>
         <translation>Исходный файл настроек не существует.</translation>
     </message>
     <message>
-        <location filename="../host/settings_util.cc" line="280"/>
+        <location filename="../host/settings_util.cc" line="466"/>
         <source>Unable to open the source file.</source>
         <translation>Не удалось открыть исходный файл.</translation>
     </message>
     <message>
-        <location filename="../host/settings_util.cc" line="292"/>
+        <location filename="../host/settings_util.cc" line="478"/>
         <source>Unable to read the source file: the file is damaged or has an unknown format.</source>
         <translation>Не удалось прочитать исходный файл: файл поврежден или имеет неизвестный формат.</translation>
     </message>
     <message>
-        <location filename="../host/settings_util.cc" line="374"/>
-        <location filename="../host/settings_util.cc" line="376"/>
+        <location filename="../host/settings_util.cc" line="560"/>
+        <location filename="../host/settings_util.cc" line="562"/>
         <source>The existing settings will be overwritten. Continue?</source>
         <translation>Существующие настройки будут перезаписаны. Продолжить?</translation>
     </message>
     <message>
-        <location filename="../host/settings_util.cc" line="374"/>
+        <location filename="../host/settings_util.cc" line="560"/>
         <source>Continue</source>
         <translation>Продолжить</translation>
     </message>
     <message>
-        <location filename="../host/settings_util.cc" line="386"/>
+        <location filename="../host/settings_util.cc" line="572"/>
         <source>Error</source>
         <translation>Ошибка</translation>
     </message>
     <message>
-        <location filename="../host/settings_util.cc" line="397"/>
+        <location filename="../host/settings_util.cc" line="583"/>
         <source>Aspia</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../host/settings_util.cc" line="309"/>
+        <location filename="../host/settings_util.cc" line="495"/>
         <source>Unable to write the secure database.</source>
         <translation>Не удалось записать защищенную базу данных.</translation>
     </message>
     <message>
-        <location filename="../host/settings_util.cc" line="329"/>
+        <location filename="../host/settings_util.cc" line="515"/>
         <source>Unable to read the secure database.</source>
         <translation>Не удалось прочитать защищенную базу данных.</translation>
     </message>
     <message>
-        <location filename="../host/settings_util.cc" line="350"/>
+        <location filename="../host/settings_util.cc" line="536"/>
         <source>Unable to open the target file.</source>
         <translation>Не удалось открыть файл назначения.</translation>
     </message>
     <message>
-        <location filename="../host/settings_util.cc" line="358"/>
+        <location filename="../host/settings_util.cc" line="544"/>
         <source>Unable to write the target file.</source>
         <translation>Не удалось записать файл назначения.</translation>
     </message>

@@ -114,6 +114,15 @@ list(APPEND SOURCE_HOST_CORE
     host_utils.cc
     host_utils.h
     input_injector.h
+    ldap_credential_cache.cc
+    ldap_credential_cache.h
+    ldap_credential_resolver.cc
+    ldap_credential_resolver.h
+    ldap_directory_query.cc
+    ldap_directory_query.h
+    ldap_user_resolver.cc
+    ldap_user_resolver.h
+    ldap_utils.h
     license_reader.cc
     license_reader.h
     process_monitor.cc
@@ -160,9 +169,14 @@ list(APPEND SOURCE_HOST_TESTS
     database_unittest.cc
     host_storage_unittest.cc
     host_user_list_unittest.cc
+    ldap_credential_cache_unittest.cc
+    ldap_directory_query_unittest.cc
+    ldap_user_resolver_unittest.cc
+    ldap_utils_unittest.cc
     router_manager_unittest.cc
     scale_reducer_unittest.cc
     screen_capturer_helper_unittest.cc
+    settings_util_unittest.cc
     tests_main.cc)
 
 if (WIN32)

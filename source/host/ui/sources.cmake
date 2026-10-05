@@ -25,6 +25,9 @@ collect_sources(SOURCE_HOST_UI
     check_password_dialog.cc
     check_password_dialog.h
     check_password_dialog.ui
+    ca_certificate_dialog.cc
+    ca_certificate_dialog.h
+    ca_certificate_dialog.ui
     config_dialog.cc
     config_dialog.h
     config_dialog.ui
@@ -34,6 +37,18 @@ collect_sources(SOURCE_HOST_UI
     host_window.cc
     host_window.h
     host_window.ui
+    ldap_bind_test_dialog.cc
+    ldap_bind_test_dialog.h
+    ldap_bind_test_dialog.ui
+    ldap_mapping_dialog.cc
+    ldap_mapping_dialog.h
+    ldap_mapping_dialog.ui
+    ldap_select_dialog.cc
+    ldap_select_dialog.h
+    ldap_select_dialog.ui
+    ldap_widget.cc
+    ldap_widget.h
+    ldap_widget.ui
     notifier_window.cc
     notifier_window.h
     notifier_window.ui

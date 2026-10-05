@@ -1,0 +1,642 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LdapWidget</class>
+ <widget class="QWidget" name="LdapWidget">
+  <layout class="QVBoxLayout" name="verticalLayout_root">
+   <item>
+    <widget class="QCheckBox" name="checkbox_enabled">
+     <property name="text">
+      <string>Enable LDAP authentication</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QTabWidget" name="tab_widget">
+     <widget class="QWidget" name="tab_connection">
+      <attribute name="title">
+       <string>Connection</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_connection">
+       <item>
+        <layout class="QFormLayout" name="form_connection">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_server">
+           <property name="text">
+            <string>Server:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="edit_server"/>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_port">
+           <property name="text">
+            <string>Port:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QSpinBox" name="spinbox_port">
+           <property name="minimum">
+            <number>1</number>
+           </property>
+           <property name="maximum">
+            <number>65535</number>
+           </property>
+           <property name="value">
+            <number>636</number>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_security">
+           <property name="text">
+            <string>Security:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QComboBox" name="combobox_security"/>
+         </item>
+         <item row="3" column="1">
+          <widget class="QCheckBox" name="checkbox_verify_peer">
+           <property name="text">
+            <string>Verify the server certificate</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_ca_certificate">
+           <property name="text">
+            <string>CA certificate:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QPushButton" name="button_ca_certificate">
+           <property name="text">
+            <string>Not set</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_test">
+         <item>
+          <widget class="QPushButton" name="button_test">
+           <property name="text">
+            <string>Test connection</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="button_check_login">
+           <property name="text">
+            <string>Check login...</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_test">
+           <property name="orientation">
+            <enum>Qt::Orientation::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_connection">
+         <property name="orientation">
+          <enum>Qt::Orientation::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_bind">
+      <attribute name="title">
+       <string>Bind / search</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_bind">
+       <item>
+        <layout class="QFormLayout" name="form_bind">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_bind_dn">
+           <property name="text">
+            <string>Bind DN:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="edit_bind_dn"/>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_bind_password">
+           <property name="text">
+            <string>Bind password:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="PasswordEdit" name="edit_bind_password"/>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_base_dn">
+           <property name="text">
+            <string>User base DN:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="edit_base_dn"/>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_user_filter">
+           <property name="text">
+            <string>User filter (%1 - login):</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLineEdit" name="edit_user_filter"/>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_user_name_attribute">
+           <property name="text">
+            <string>Login attribute:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QLineEdit" name="edit_user_name_attribute"/>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_bind_hint">
+         <property name="text">
+          <string>Leave the bind DN empty to connect anonymously.</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_bind">
+         <property name="orientation">
+          <enum>Qt::Orientation::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_groups">
+      <attribute name="title">
+       <string>Groups</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_groups">
+       <item>
+        <layout class="QFormLayout" name="form_groups">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_group_base_dn">
+           <property name="text">
+            <string>Group base DN:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="edit_group_base_dn"/>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_group_filter">
+           <property name="text">
+            <string>Group filter:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="edit_group_filter"/>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_group_attribute">
+           <property name="text">
+            <string>Group name attribute:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="edit_group_attribute"/>
+         </item>
+         <item row="3" column="1">
+          <widget class="QCheckBox" name="checkbox_group_nested">
+           <property name="text">
+            <string>Resolve nested groups (Active Directory)</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_groups">
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_group_buttons">
+           <item>
+            <widget class="QPushButton" name="button_add_group">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="toolTip">
+              <string>Add new group</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="../../common/resources/common.qrc">
+               <normaloff>:/img/add.svg</normaloff>:/img/add.svg</iconset>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>24</width>
+               <height>24</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="button_modify_group">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="toolTip">
+              <string>Edit group</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="../../common/resources/common.qrc">
+               <normaloff>:/img/pencil-drawing.svg</normaloff>:/img/pencil-drawing.svg</iconset>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>24</width>
+               <height>24</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="button_delete_group">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="toolTip">
+              <string>Delete group</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="../../common/resources/common.qrc">
+               <normaloff>:/img/cancel.svg</normaloff>:/img/cancel.svg</iconset>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>24</width>
+               <height>24</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacer_group_buttons">
+             <property name="orientation">
+              <enum>Qt::Orientation::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QTreeWidget" name="tree_groups">
+           <property name="contextMenuPolicy">
+            <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+           </property>
+           <property name="indentation">
+            <number>0</number>
+           </property>
+           <property name="rootIsDecorated">
+            <bool>false</bool>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>24</width>
+             <height>24</height>
+            </size>
+           </property>
+           <column>
+            <property name="text">
+             <string>Group</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_users">
+      <attribute name="title">
+       <string>Users</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_users">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_users">
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_user_buttons">
+           <item>
+            <widget class="QPushButton" name="button_add_user">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="toolTip">
+              <string>Add new user</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="../../common/resources/common.qrc">
+               <normaloff>:/img/add.svg</normaloff>:/img/add.svg</iconset>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>24</width>
+               <height>24</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="button_modify_user">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="toolTip">
+              <string>Edit user</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="../../common/resources/common.qrc">
+               <normaloff>:/img/pencil-drawing.svg</normaloff>:/img/pencil-drawing.svg</iconset>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>24</width>
+               <height>24</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="button_delete_user">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="toolTip">
+              <string>Delete user</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="../../common/resources/common.qrc">
+               <normaloff>:/img/cancel.svg</normaloff>:/img/cancel.svg</iconset>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>24</width>
+               <height>24</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacer_user_buttons">
+             <property name="orientation">
+              <enum>Qt::Orientation::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QTreeWidget" name="tree_users">
+           <property name="contextMenuPolicy">
+            <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+           </property>
+           <property name="indentation">
+            <number>0</number>
+           </property>
+           <property name="rootIsDecorated">
+            <bool>false</bool>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>24</width>
+             <height>24</height>
+            </size>
+           </property>
+           <column>
+            <property name="text">
+             <string>User</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_advanced">
+      <attribute name="title">
+       <string>Advanced</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_advanced">
+       <item>
+        <widget class="QGroupBox" name="groupbox_default_sessions">
+         <property name="title">
+          <string>Rights when no mapping matches</string>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_default">
+          <item>
+           <widget class="QCheckBox" name="checkbox_default_desktop">
+            <property name="text">
+             <string>Desktop</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkbox_default_terminal">
+            <property name="text">
+             <string>Terminal</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkbox_default_file_transfer">
+            <property name="text">
+             <string>Files</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkbox_default_system_info">
+            <property name="text">
+             <string>System</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkbox_default_chat">
+            <property name="text">
+             <string>Chat</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="checkbox_deny_if_unmapped">
+         <property name="text">
+          <string>Deny when no mapping matches (ignore the default rights)</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="checkbox_allow_local_fallback">
+         <property name="text">
+          <string>Fall back to a local account when LDAP cannot decide (LDAP preferred)</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QFormLayout" name="form_advanced">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_cache_ttl">
+           <property name="text">
+            <string>Cache the resolution for:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QSpinBox" name="spinbox_cache_ttl">
+           <property name="maximum">
+            <number>3600</number>
+           </property>
+           <property name="value">
+            <number>60</number>
+           </property>
+           <property name="suffix">
+            <string> seconds</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_advanced">
+         <property name="orientation">
+          <enum>Qt::Orientation::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>PasswordEdit</class>
+   <extends>QLineEdit</extends>
+   <header>common/desktop/password_edit.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="../../common/resources/common.qrc"/>
+ </resources>
+ <connections/>
+</ui>

@@ -643,6 +643,16 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="tab_ldap">
+      <attribute name="title">
+       <string>LDAP</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_ldap">
+       <item>
+        <widget class="LdapWidget" name="ldap_widget"/>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
    <item>
@@ -686,6 +696,12 @@
    <class>DialogButtonBox</class>
    <extends>QDialogButtonBox</extends>
    <header>common/desktop/dialog_button_box.h</header>
+  </customwidget>
+  <customwidget>
+   <class>LdapWidget</class>
+   <extends>QWidget</extends>
+   <header>host/ui/ldap_widget.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>

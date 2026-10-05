@@ -77,6 +77,37 @@ const char kUserVerifier[] = "verifier";
 const char kUserSessions[] = "sessions";
 const char kUserFlags[] = "flags";
 
+// The LDAP settings and the mappings they feed. A file written before they existed has no "ldap"
+// object, and the import then leaves what the host holds as it is.
+const char kLdap[] = "ldap";
+
+const char kLdapEnabled[] = "enabled";
+const char kLdapServer[] = "server";
+const char kLdapPort[] = "port";
+const char kLdapSecurity[] = "security";
+const char kLdapVerifyPeer[] = "verify_peer";
+const char kLdapCaCertificate[] = "ca_certificate";
+const char kLdapBindDn[] = "bind_dn";
+const char kLdapBindPassword[] = "bind_password";
+const char kLdapBaseDn[] = "base_dn";
+const char kLdapUserFilter[] = "user_filter";
+const char kLdapUserNameAttribute[] = "user_name_attribute";
+const char kLdapGroupNested[] = "group_nested";
+const char kLdapGroupBaseDn[] = "group_base_dn";
+const char kLdapGroupFilter[] = "group_filter";
+const char kLdapGroupAttribute[] = "group_attribute";
+const char kLdapDefaultSessions[] = "default_sessions";
+const char kLdapDenyIfUnmapped[] = "deny_if_unmapped";
+const char kLdapAllowLocalFallback[] = "allow_local_fallback";
+const char kLdapCacheTtl[] = "cache_ttl";
+
+const char kLdapGroups[] = "groups";
+const char kLdapUsers[] = "users";
+
+const char kMappingName[] = "name";
+const char kMappingSessions[] = "sessions";
+const char kMappingFlags[] = "flags";
+
 const int kUpdatePublicKeySize = 32;
 
 //--------------------------------------------------------------------------------------------------
@@ -93,6 +124,60 @@ QJsonObject exportSystemSettings()
     obj[kUpdateCheckFrequency] = settings.updateCheckFrequency();
     obj[kUpdateServer] = settings.updateServer();
     obj[kUpdatePublicKey] = QString::fromLatin1(settings.updatePublicKey().toHex());
+    return obj;
+}
+
+//--------------------------------------------------------------------------------------------------
+QJsonObject exportLdap()
+{
+    Database& db = Database::instance();
+    const Database::LdapConfig config = db.ldapConfig();
+
+    QJsonObject obj;
+    obj[kLdapEnabled] = config.enabled;
+    obj[kLdapServer] = config.server;
+    obj[kLdapPort] = static_cast<int>(config.port);
+    obj[kLdapSecurity] = static_cast<int>(config.security);
+    obj[kLdapVerifyPeer] = config.verify_peer;
+    obj[kLdapCaCertificate] = config.ca_certificate;
+    obj[kLdapBindDn] = config.bind_dn;
+
+    // The password of the service account goes in as it is: the file exists to put the same
+    // configuration on another host, and without the password the copy could not bind. The file is a
+    // secret for that reason and has to be kept like one.
+    obj[kLdapBindPassword] = config.bind_password;
+
+    obj[kLdapBaseDn] = config.base_dn;
+    obj[kLdapUserFilter] = config.user_filter;
+    obj[kLdapUserNameAttribute] = config.user_name_attribute;
+    obj[kLdapGroupNested] = config.group_nested;
+    obj[kLdapGroupBaseDn] = config.group_base_dn;
+    obj[kLdapGroupFilter] = config.group_filter;
+    obj[kLdapGroupAttribute] = config.group_attribute;
+    obj[kLdapDefaultSessions] = static_cast<qint64>(config.default_sessions);
+    obj[kLdapDenyIfUnmapped] = config.deny_if_unmapped;
+    obj[kLdapAllowLocalFallback] = config.allow_local_fallback;
+    obj[kLdapCacheTtl] = config.cache_ttl;
+
+    const auto export_mappings = [](const QVector<Database::LdapMapping>& mappings)
+    {
+        QJsonArray array;
+
+        for (const Database::LdapMapping& mapping : mappings)
+        {
+            QJsonObject item;
+            item[kMappingName] = mapping.name;
+            item[kMappingSessions] = static_cast<qint64>(mapping.sessions);
+            item[kMappingFlags] = static_cast<qint64>(mapping.flags);
+            array.append(item);
+        }
+
+        return array;
+    };
+
+    obj[kLdapGroups] = export_mappings(db.ldapGroups());
+    obj[kLdapUsers] = export_mappings(db.ldapUsers());
+
     return obj;
 }
 
@@ -131,6 +216,7 @@ QJsonObject exportDatabase()
         users_array.append(user_obj);
     }
     obj[kUsers] = users_array;
+    obj[kLdap] = exportLdap();
 
     return obj;
 }
@@ -177,6 +263,102 @@ void importSystemSettings(const QJsonObject& obj)
     }
 
     settings.sync();
+}
+
+//--------------------------------------------------------------------------------------------------
+bool importLdap(const QJsonObject& obj)
+{
+    Database& db = Database::instance();
+
+    // Starting from what the host holds keeps a file that names only some of the fields from resetting
+    // the rest to their defaults.
+    Database::LdapConfig config = db.ldapConfig();
+
+    if (obj.contains(kLdapEnabled))
+        config.enabled = obj[kLdapEnabled].toBool();
+    if (obj.contains(kLdapServer))
+        config.server = obj[kLdapServer].toString();
+    if (obj.contains(kLdapPort))
+        config.port = static_cast<quint16>(obj[kLdapPort].toInt());
+    if (obj.contains(kLdapSecurity))
+        config.security = static_cast<Database::LdapSecurity>(obj[kLdapSecurity].toInt());
+    if (obj.contains(kLdapVerifyPeer))
+        config.verify_peer = obj[kLdapVerifyPeer].toBool();
+    if (obj.contains(kLdapCaCertificate))
+        config.ca_certificate = obj[kLdapCaCertificate].toString();
+    if (obj.contains(kLdapBindDn))
+        config.bind_dn = obj[kLdapBindDn].toString();
+    if (obj.contains(kLdapBindPassword))
+        config.bind_password = obj[kLdapBindPassword].toString();
+    if (obj.contains(kLdapBaseDn))
+        config.base_dn = obj[kLdapBaseDn].toString();
+    if (obj.contains(kLdapUserFilter))
+        config.user_filter = obj[kLdapUserFilter].toString();
+    if (obj.contains(kLdapUserNameAttribute))
+        config.user_name_attribute = obj[kLdapUserNameAttribute].toString();
+    if (obj.contains(kLdapGroupNested))
+        config.group_nested = obj[kLdapGroupNested].toBool();
+    if (obj.contains(kLdapGroupBaseDn))
+        config.group_base_dn = obj[kLdapGroupBaseDn].toString();
+    if (obj.contains(kLdapGroupFilter))
+        config.group_filter = obj[kLdapGroupFilter].toString();
+    if (obj.contains(kLdapGroupAttribute))
+        config.group_attribute = obj[kLdapGroupAttribute].toString();
+    if (obj.contains(kLdapDefaultSessions))
+        config.default_sessions = static_cast<quint32>(obj[kLdapDefaultSessions].toInteger());
+    if (obj.contains(kLdapDenyIfUnmapped))
+        config.deny_if_unmapped = obj[kLdapDenyIfUnmapped].toBool();
+    if (obj.contains(kLdapAllowLocalFallback))
+        config.allow_local_fallback = obj[kLdapAllowLocalFallback].toBool();
+    if (obj.contains(kLdapCacheTtl))
+        config.cache_ttl = obj[kLdapCacheTtl].toInt();
+
+    if (!db.setLdapConfig(config))
+    {
+        LOG(ERROR) << "Unable to write the LDAP settings";
+        return false;
+    }
+
+    const auto import_mappings = [](const QJsonValue& value)
+    {
+        QVector<Database::LdapMapping> mappings;
+
+        for (const QJsonValue& item_value : value.toArray())
+        {
+            const QJsonObject item = item_value.toObject();
+
+            Database::LdapMapping mapping;
+            mapping.name = item[kMappingName].toString().trimmed();
+            mapping.sessions = static_cast<quint32>(item[kMappingSessions].toInteger());
+            mapping.flags = item.contains(kMappingFlags)
+                ? static_cast<quint32>(item[kMappingFlags].toInteger())
+                : static_cast<quint32>(User::ENABLED);
+
+            if (mapping.name.isEmpty())
+            {
+                LOG(WARNING) << "Skipping an LDAP mapping with no name";
+                continue;
+            }
+
+            mappings.append(mapping);
+        }
+
+        return mappings;
+    };
+
+    if (obj.contains(kLdapGroups) && !db.replaceLdapGroups(import_mappings(obj[kLdapGroups])))
+    {
+        LOG(ERROR) << "Unable to write the LDAP group mappings";
+        return false;
+    }
+
+    if (obj.contains(kLdapUsers) && !db.replaceLdapUsers(import_mappings(obj[kLdapUsers])))
+    {
+        LOG(ERROR) << "Unable to write the LDAP user mappings";
+        return false;
+    }
+
+    return true;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -252,6 +434,10 @@ bool importDatabase(const QJsonObject& obj)
             return false;
         }
     }
+
+    const QJsonObject ldap_obj = obj.value(kLdap).toObject();
+    if (!ldap_obj.isEmpty() && !importLdap(ldap_obj))
+        return false;
 
     return true;
 }

@@ -332,6 +332,9 @@ ConfigDialog::ConfigDialog(QWidget* parent)
     connect(ui->button_modify, &QPushButton::clicked, this, &ConfigDialog::onModifyUser);
     connect(ui->button_delete, &QPushButton::clicked, this, &ConfigDialog::onDeleteUser);
 
+    // LDAP authentication settings are a page of their own.
+    connect(ui->ldap_widget, &LdapWidget::sig_changed, this, &ConfigDialog::onConfigChanged);
+
     //---------------------------------------------------------------------------------------------
     // Other
     //---------------------------------------------------------------------------------------------
@@ -768,6 +771,12 @@ void ConfigDialog::onButtonBoxClicked(QAbstractButton* button)
         db.setNoUserAction(static_cast<Database::NoUserAction>(
             ui->combobox_no_user_action->currentData().toInt()));
 
+        if (!ui->ldap_widget->save())
+        {
+            MsgBox::warning(this, tr("Unable to save the LDAP settings."));
+            return;
+        }
+
         settings.sync();
 
         setConfigChanged(FROM_HERE, false);
@@ -908,6 +917,8 @@ void ConfigDialog::reloadAll()
     }
 
     ui->checkbox_disable_shutdown->setChecked(settings.isApplicationShutdownDisabled());
+
+    ui->ldap_widget->reload();
 
     setConfigChanged(FROM_HERE, false);
 }
