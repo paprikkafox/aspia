@@ -21,6 +21,9 @@
 
 #include <QVector>
 
+#include <memory>
+
+#include "base/peer/credential_resolver.h"
 #include "base/peer/user.h"
 
 class UserList
@@ -32,6 +35,10 @@ public:
     virtual QByteArray seedKey() const = 0;
     virtual void setSeedKey(const QByteArray& seed_key) = 0;
     virtual void setOneTimeUser(const User& /* user */) {}
+
+    // Creates a resolver for the password (IDENTIFY_PASSWORD) authentication path, or nullptr when
+    // the list only supports SRP. The caller owns the returned object.
+    virtual std::unique_ptr<CredentialResolver> createCredentialResolver() { return nullptr; }
 };
 
 #endif // BASE_PEER_USER_LIST_BASE_H

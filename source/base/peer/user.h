@@ -50,6 +50,11 @@ public:
     static const size_t kMaxVerifierSize = 1024;
 
     static bool isValidUserName(const QString& username);
+
+    // A relaxed check for a login that may be an LDAP identity (DOMAIN\user, user@domain): it accepts
+    // the LDAP separator characters in addition to the ones a local SRP user name allows.
+    static bool isValidLogin(const QString& login);
+
     static bool isValidPassword(const SecureString& password);
     static bool isSafePassword(const SecureString& password);
 

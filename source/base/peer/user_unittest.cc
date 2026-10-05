@@ -321,3 +321,23 @@ TEST(user_test, flags_enabled)
     user.flags = 0;
     EXPECT_EQ(user.flags & User::ENABLED, 0u);
 }
+
+// ============================================================================
+// isValidLogin
+// ============================================================================
+
+TEST(user_test, valid_login_accepts_ldap_forms)
+{
+    EXPECT_TRUE(User::isValidLogin("operator"));
+    EXPECT_TRUE(User::isValidLogin("user@domain.example"));
+    EXPECT_TRUE(User::isValidLogin("DOMAIN\\user"));
+    EXPECT_TRUE(User::isValidLogin("user.name"));
+}
+
+TEST(user_test, invalid_login_rejects_bad_input)
+{
+    EXPECT_FALSE(User::isValidLogin(""));
+    EXPECT_FALSE(User::isValidLogin("user name"));
+    EXPECT_FALSE(User::isValidLogin("user/name"));
+    EXPECT_FALSE(User::isValidLogin(QString(User::kMaxUserNameLength + 1, 'a')));
+}

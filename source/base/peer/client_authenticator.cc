@@ -99,6 +99,12 @@ void ClientAuthenticator::setIdentify(proto::key_exchange::Identify identify)
 }
 
 //--------------------------------------------------------------------------------------------------
+void ClientAuthenticator::setPasswordAuth(PasswordAuth password_auth)
+{
+    password_auth_ = password_auth;
+}
+
+//--------------------------------------------------------------------------------------------------
 void ClientAuthenticator::setUserName(const QString& username)
 {
     CLOG(TRACE) << "User name assigned";
@@ -149,12 +155,24 @@ void ClientAuthenticator::onReceived(const QByteArray& buffer)
         {
             if (readServerHello(buffer))
             {
-                if (identify_ == proto::key_exchange::IDENTIFY_ANONYMOUS)
-                    internal_state_ = InternalState::READ_SESSION_CHALLENGE;
-                else if (identify_ == proto::key_exchange::IDENTIFY_SRP)
-                    sendIdentify();
-                else
-                    finish(FROM_HERE, ErrorCode::UNKNOWN_ERROR);
+                switch (identify_)
+                {
+                    case proto::key_exchange::IDENTIFY_ANONYMOUS:
+                        internal_state_ = InternalState::READ_SESSION_CHALLENGE;
+                        break;
+
+                    case proto::key_exchange::IDENTIFY_SRP:
+                        sendIdentify();
+                        break;
+
+                    case proto::key_exchange::IDENTIFY_PASSWORD:
+                        sendPasswordIdentify();
+                        break;
+
+                    default:
+                        finish(FROM_HERE, ErrorCode::UNKNOWN_ERROR);
+                        break;
+                }
             }
         }
         break;
@@ -200,16 +218,16 @@ void ClientAuthenticator::sendClientHello()
             return;
     }
 
-    // We do not allow anonymous connections without a peer public key.
+    // Anonymous connections require a peer public key.
     if (identify_ == proto::key_exchange::IDENTIFY_ANONYMOUS && peer_public_key_.isEmpty())
     {
         finish(FROM_HERE, ErrorCode::UNKNOWN_ERROR);
         return;
     }
 
-    // SRP uses ephemeral X25519 derived during the handshake itself - there is no out-of-band
-    // peer public key.
-    if (identify_ == proto::key_exchange::IDENTIFY_SRP && !peer_public_key_.isEmpty())
+    // SRP carries no out-of-band peer public key; the password method over a direct connection does.
+    if (identify_ == proto::key_exchange::IDENTIFY_SRP && !peer_public_key_.isEmpty() &&
+        password_auth_ != PasswordAuth::HOST_KEY)
     {
         finish(FROM_HERE, ErrorCode::UNKNOWN_ERROR);
         return;
@@ -219,10 +237,13 @@ void ClientAuthenticator::sendClientHello()
     client_hello.set_encryption(proto::key_exchange::ENCRYPTION_AES256_GCM);
     client_hello.set_identify(identify_);
 
-    // Both paths use ephemeral X25519.
-    // ANONYMOUS: derive shared with the server's known long-term public key (peer_public_key_) right now.
-    // SRP: only generate the keypair, the shared is computed later in readServerHello when the server's
-    // ephemeral public key arrives.
+    // Offer the password method when configured. SRP stays the requested method so an older server
+    // still works; a capable server may switch to the password method and answer in ServerHello.
+    quint32 identify_methods = 1u << static_cast<quint32>(identify_);
+    if (password_auth_ != PasswordAuth::DISABLE && identify_ == proto::key_exchange::IDENTIFY_SRP)
+        identify_methods |= 1u << static_cast<quint32>(proto::key_exchange::IDENTIFY_PASSWORD);
+    client_hello.set_identify_methods(identify_methods);
+
     encrypt_iv_ = Random::byteArray(kIvSize);
     if (encrypt_iv_.isEmpty())
     {
@@ -247,23 +268,6 @@ void ClientAuthenticator::sendClientHello()
     client_hello.set_public_key(public_key.toStdString());
     client_hello.set_iv(encrypt_iv_.toStdString());
 
-    if (identify_ == proto::key_exchange::IDENTIFY_ANONYMOUS)
-    {
-        SecureByteArray x25519_secret(key_pair_.sessionKey(peer_public_key_));
-        if (x25519_secret.isEmpty())
-        {
-            finish(FROM_HERE, ErrorCode::UNKNOWN_ERROR);
-            return;
-        }
-
-        // ANONYMOUS order: secret before ClientHello bytes (server can compute the secret
-        // immediately after parsing the peer's public_key from CH, so it mirrors this).
-        appendTranscript(x25519_secret.toByteArray());
-
-        // No further use of the keypair.
-        key_pair_ = KeyPair();
-    }
-
     // Remove this after support for versions below 3.0.0 ends.
     if (kMinimumSupportedVersion < kVersion_3_0_0)
     {
@@ -280,7 +284,9 @@ void ClientAuthenticator::sendClientHello()
         return;
     }
 
-    appendTranscript(message);
+    // The transcript is assembled in readServerHello, once the selected method (and therefore the
+    // position of the shared secret relative to ClientHello) is known.
+    client_hello_ = message;
 
     CLOG(TRACE) << "Sending: ClientHello (" << message.size() << ")";
     emit sig_outgoingMessage(message, false);
@@ -328,30 +334,85 @@ bool ClientAuthenticator::readServerHello(const QByteArray& buffer)
         return false;
     }
 
-    // For anonymous mode, the server does not send the public key, because we already know the
-    // server's public key.
+    // The server may select a method other than the one requested. An older server does not send the
+    // field at all (its value stays SRP), so the requested method stands in that case.
+    proto::key_exchange::Identify selected = server_hello.identify();
+    if (selected == proto::key_exchange::IDENTIFY_SRP &&
+        identify_ != proto::key_exchange::IDENTIFY_SRP)
+    {
+        selected = identify_;
+    }
+    identify_ = selected;
+
+    // For anonymous and for the password method over a direct connection the host is authenticated
+    // by its long-term key, which the client already knows: the server sends no key in ServerHello
+    // and the shared secret comes from that key. Otherwise (SRP and the password method over a
+    // brokered transport) the shared secret comes from the server's ephemeral key in ServerHello.
     const QByteArray server_public_key = QByteArray::fromStdString(server_hello.public_key());
 
-    const bool is_srp = (identify_ == proto::key_exchange::IDENTIFY_SRP);
+    const bool uses_host_key =
+        identify_ == proto::key_exchange::IDENTIFY_ANONYMOUS ||
+        (identify_ == proto::key_exchange::IDENTIFY_PASSWORD &&
+         password_auth_ == PasswordAuth::HOST_KEY);
 
-    // Public key is required for SRP.
-    if (is_srp == server_public_key.isEmpty())
+    if (!key_pair_.isValid())
     {
-        finish(FROM_HERE, ErrorCode::PROTOCOL_ERROR);
+        finish(FROM_HERE, ErrorCode::UNKNOWN_ERROR);
         return false;
     }
 
-    if (is_srp)
+    SecureByteArray x25519_secret;
+
+    if (uses_host_key)
     {
-        if (!key_pair_.isValid())
+        // The host key is either pinned/provisioned, or taken from ServerHello on first use (TOFU).
+        QByteArray host_key = peer_public_key_;
+        if (host_key.isEmpty())
+        {
+            host_key = server_public_key;
+            if (host_key.isEmpty())
+            {
+                finish(FROM_HERE, ErrorCode::PROTOCOL_ERROR);
+                return false;
+            }
+        }
+        else if (!server_public_key.isEmpty() && server_public_key != host_key)
+        {
+            // The host presented a key different from the pinned one.
+            finish(FROM_HERE, ErrorCode::ACCESS_DENIED);
+            return false;
+        }
+
+        host_public_key_ = host_key;
+
+        // The key was not known before this connection: it is pinned if the handshake succeeds.
+        host_key_learned_ = identify_ == proto::key_exchange::IDENTIFY_PASSWORD &&
+                            password_auth_ == PasswordAuth::HOST_KEY &&
+                            peer_public_key_.isEmpty();
+
+        x25519_secret = key_pair_.sessionKey(host_key);
+        if (x25519_secret.isEmpty())
         {
             finish(FROM_HERE, ErrorCode::UNKNOWN_ERROR);
             return false;
         }
 
-        // SRP: derive the shared secret with the server's ephemeral pubkey just received.
-        // Order on the wire: ClientHello || x25519_secret || ServerHello.
-        SecureByteArray x25519_secret(key_pair_.sessionKey(server_public_key));
+        // Order: x25519_secret || ClientHello || ServerHello.
+        appendTranscript(x25519_secret.toByteArray());
+        appendTranscript(client_hello_);
+    }
+    else
+    {
+        if (server_public_key.isEmpty())
+        {
+            finish(FROM_HERE, ErrorCode::PROTOCOL_ERROR);
+            return false;
+        }
+
+        // Order: ClientHello || x25519_secret || ServerHello.
+        appendTranscript(client_hello_);
+
+        x25519_secret = key_pair_.sessionKey(server_public_key);
         if (x25519_secret.isEmpty())
         {
             finish(FROM_HERE, ErrorCode::UNKNOWN_ERROR);
@@ -359,18 +420,14 @@ bool ClientAuthenticator::readServerHello(const QByteArray& buffer)
         }
 
         appendTranscript(x25519_secret.toByteArray());
-
-        // No further use of the keypair.
-        key_pair_ = KeyPair();
     }
+
+    // No further use of the keypair.
+    key_pair_ = KeyPair();
 
     appendTranscript(buffer);
 
-    // ANONYMOUS: hash covers x25519_secret || ClientHello || ServerHello.
-    // SRP: ClientHello || x25519_secret || ServerHello.
-    // The session_key derived from it protects all subsequent handshake messages (SrpIdentify,
-    // SrpServerKeyExchange, SrpClientKeyExchange for SRP;
-    // SessionChallenge / SessionResponse for both modes).
+    // The session key derived from the transcript protects all subsequent handshake messages.
     CLOG(TRACE) << "Session key is ready";
     setSessionKeyReady();
 
@@ -401,6 +458,37 @@ void ClientAuthenticator::sendIdentify()
 
     emit sig_outgoingMessage(message, true);
     internal_state_ = InternalState::READ_SERVER_KEY_EXCHANGE;
+}
+
+//--------------------------------------------------------------------------------------------------
+void ClientAuthenticator::sendPasswordIdentify()
+{
+    if (username_.isEmpty())
+    {
+        finish(FROM_HERE, ErrorCode::UNKNOWN_ERROR);
+        return;
+    }
+
+    proto::key_exchange::PasswordIdentify identify;
+    identify.set_username(username_.toStdString());
+    identify.set_password(password_.toString().toStdString());
+
+    QByteArray message = serialize(identify);
+    if (message.isEmpty())
+    {
+        finish(FROM_HERE, ErrorCode::UNKNOWN_ERROR);
+        return;
+    }
+
+    CLOG(TRACE) << "Sending: PasswordIdentify (" << message.size() << ")";
+
+    // Encrypted under the handshake key established at ServerHello. The message is then bound into
+    // the transcript, so the next key change moves both peers to the final session key.
+    appendTranscript(message);
+    emit sig_outgoingMessage(message, true);
+    setSessionKeyReady();
+
+    internal_state_ = InternalState::READ_SESSION_CHALLENGE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -554,9 +642,9 @@ void ClientAuthenticator::sendClientKeyExchange()
     emit sig_outgoingMessage(message, true);
     internal_state_ = InternalState::READ_SESSION_CHALLENGE;
 
-    // Mix the SRP key after SrpClientKeyExchange. Transcript now covers full handshake +
-    // srp_raw_key. The new sessionKey() switches the channel to the final key, used for
-    // SessionChallenge / SessionResponse.
+    // The SRP key is mixed in after SrpClientKeyExchange, so the transcript covers the full
+    // handshake plus the SRP key, and sessionKey() then returns the final key used for
+    // SessionChallenge and SessionResponse.
     SecureByteArray srp_raw_key(key.toByteArray());
     if (srp_raw_key.isEmpty())
     {
@@ -645,5 +733,10 @@ void ClientAuthenticator::sendSessionResponse()
 
     CLOG(TRACE) << "Sending: SessionResponse (" << message.size() << ")";
     emit sig_outgoingMessage(message, true);
+
+    // The host accepted this session, so a key that was pinned tentatively on first use is confirmed.
+    if (host_key_learned_)
+        emit sig_hostKeyLearned(host_public_key_);
+
     finish(FROM_HERE, ErrorCode::SUCCESS);
 }

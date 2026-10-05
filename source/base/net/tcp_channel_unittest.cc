@@ -33,7 +33,9 @@
 #include "base/crypto/secure_string.h"
 #include "base/net/tcp_channel_ng.h"
 #include "base/net/tcp_server.h"
+#include "base/crypto/key_pair.h"
 #include "base/peer/client_authenticator.h"
+#include "base/peer/credential_resolver.h"
 #include "base/peer/user.h"
 #include "base/peer/user_list.h"
 #include "base/threading/asio_event_dispatcher.h"
@@ -60,8 +62,36 @@ constexpr quint16 kPortCount = 50;
 // anything.
 const Seconds kWaitTimeout{ 30 };
 
+// Resolves a fixed login/password to fixed rights, standing in for the host's LDAP resolver.
+class TestCredentialResolver final : public CredentialResolver
+{
+public:
+    TestCredentialResolver(const QString& login, const QString& password, quint32 sessions)
+        : login_(login),
+          password_(password),
+          sessions_(sessions)
+    {
+        // Nothing
+    }
+
+    void resolve(const QString& login, const SecureString& password) final
+    {
+        if (login.compare(login_, Qt::CaseInsensitive) == 0 && password.toString() == password_)
+            emit sig_resolved(login_, sessions_);
+        else
+            emit sig_denied();
+    }
+
+    void cancel() final {}
+
+private:
+    QString login_;
+    QString password_;
+    quint32 sessions_;
+};
+
 // A user list with a single user - the same thing the router hands to its server, minus the
-// database behind it.
+// database behind it. It can also answer the password method through a resolver.
 class TestUserList final : public UserList
 {
 public:
@@ -76,11 +106,28 @@ public:
     QByteArray seedKey() const final { return seed_key_; }
     void setSeedKey(const QByteArray& seed_key) final { seed_key_ = seed_key; }
 
+    std::unique_ptr<CredentialResolver> createCredentialResolver() final
+    {
+        if (!password_supported_)
+            return nullptr;
+        return std::make_unique<TestCredentialResolver>(user_.name, password_, sessions_);
+    }
+
     void setUser(const User& user) { user_ = user; }
+
+    void enablePasswordAuth(const QString& password, quint32 sessions)
+    {
+        password_supported_ = true;
+        password_ = password;
+        sessions_ = sessions;
+    }
 
 private:
     User user_;
     QByteArray seed_key_ = QByteArrayLiteral("seed-key-for-tests");
+    bool password_supported_ = false;
+    QString password_;
+    quint32 sessions_ = 0;
 };
 
 // Counts events raised in the worker thread and lets the test thread wait for them.
@@ -198,7 +245,8 @@ protected:
     }
 
     // Starts the server on the loopback interface. Returns the port it listens on, or zero.
-    quint16 startServer(const QString& iface = "127.0.0.1")
+    quint16 startServer(const QString& iface = "127.0.0.1",
+                        const SecureByteArray& private_key = SecureByteArray())
     {
         quint16 port = 0;
 
@@ -206,6 +254,9 @@ protected:
         {
             server_ = new TcpServer();
             server_->setUserList(user_list_);
+
+            if (!private_key.isEmpty())
+                server_->setPrivateKey(private_key);
 
             // The rate limiter is not what these tests are about, and every connection here comes
             // from the same address.
@@ -236,8 +287,9 @@ protected:
             });
 
             QObject::connect(server_, &TcpServer::sig_errorOccurred, server_,
-                             [this](const QString&, const QString&)
+                             [this](const QString&, const QString& user_name)
             {
+                server_error_user_ = user_name;
                 rejected_.signal();
             });
 
@@ -257,12 +309,18 @@ protected:
     // Opens a client channel and starts the handshake. Returns once the connect is under way, not
     // once it has completed.
     void connectClient(quint16 port, const QString& user_name, const QString& password,
-                       quint32 session_type)
+                       quint32 session_type,
+                       ClientAuthenticator::PasswordAuth password_auth =
+                           ClientAuthenticator::PasswordAuth::DISABLE,
+                       const QByteArray& peer_public_key = QByteArray())
     {
         worker_->invoke([&]()
         {
             ClientAuthenticator* authenticator = new ClientAuthenticator();
             authenticator->setIdentify(proto::key_exchange::IDENTIFY_SRP);
+            authenticator->setPasswordAuth(password_auth);
+            if (!peer_public_key.isEmpty())
+                authenticator->setPeerPublicKey(peer_public_key);
             authenticator->setUserName(user_name);
             authenticator->setPassword(SecureString(password));
             authenticator->setSessionType(session_type);
@@ -394,6 +452,9 @@ protected:
 
     TcpChannel::ErrorCode server_error_code_ = TcpChannel::ErrorCode::SUCCESS;
     TcpChannel::ErrorCode client_error_code_ = TcpChannel::ErrorCode::SUCCESS;
+
+    // The login the server reported for a refused connection (TcpServer::sig_errorOccurred).
+    QString server_error_user_;
 
     std::unique_ptr<asio::ip::tcp::socket> raw_socket_;
     char raw_buffer_[64] = {};
@@ -751,4 +812,141 @@ TEST_F(TcpChannelTest, PeerDisappearanceIsReported)
 
     ASSERT_TRUE(server_error_.wait(1, kWaitTimeout));
     EXPECT_EQ(server_error_code_, TcpChannel::ErrorCode::REMOTE_HOST_CLOSED);
+}
+
+//--------------------------------------------------------------------------------------------------
+// A capable client on a direct connection authenticates through the password method: the host is
+// authenticated by its long-term key, the credentials are checked by the resolver (LDAP), and the
+// session type comes from the resolved rights.
+TEST_F(TcpChannelTest, PasswordMethodAuthenticatesOverHostKey)
+{
+    const KeyPair host_key = KeyPair::create(KeyPair::Type::X25519);
+    ASSERT_TRUE(host_key.isValid());
+
+    user_list_->enablePasswordAuth(QLatin1String(kPassword), kAllowedSessionType);
+
+    const quint16 port = startServer("127.0.0.1", host_key.privateKey());
+    ASSERT_NE(port, 0);
+
+    connectClient(port, QLatin1String(kUserName), QLatin1String(kPassword), kAllowedSessionType,
+                  ClientAuthenticator::PasswordAuth::HOST_KEY, host_key.publicKey());
+
+    ASSERT_TRUE(client_authenticated_.wait(1, kWaitTimeout));
+    ASSERT_TRUE(accepted_.wait(1, kWaitTimeout));
+    EXPECT_EQ(client_error_.count(), 0);
+
+    worker_->invoke([this]()
+    {
+        ASSERT_NE(server_channel_, nullptr);
+        EXPECT_TRUE(server_channel_->isAuthenticated());
+        EXPECT_EQ(server_channel_->peerUserName(), kUserName);
+        EXPECT_EQ(server_channel_->peerSessionType(), kAllowedSessionType);
+    });
+}
+
+//--------------------------------------------------------------------------------------------------
+// The password method denies a wrong password: the resolver is authoritative and the channel never
+// reaches the ready queue.
+TEST_F(TcpChannelTest, PasswordMethodRefusesWrongPassword)
+{
+    const KeyPair host_key = KeyPair::create(KeyPair::Type::X25519);
+    ASSERT_TRUE(host_key.isValid());
+
+    user_list_->enablePasswordAuth(QLatin1String(kPassword), kAllowedSessionType);
+
+    const quint16 port = startServer("127.0.0.1", host_key.privateKey());
+    ASSERT_NE(port, 0);
+
+    connectClient(port, QLatin1String(kUserName), "WrongPassword!", kAllowedSessionType,
+                  ClientAuthenticator::PasswordAuth::HOST_KEY, host_key.publicKey());
+
+    ASSERT_TRUE(client_error_.wait(1, kWaitTimeout));
+    EXPECT_EQ(client_error_code_, TcpChannel::ErrorCode::ACCESS_DENIED);
+    EXPECT_EQ(accepted_.count(), 0);
+
+    // The refusal still names the login that was tried.
+    ASSERT_TRUE(rejected_.wait(1, kWaitTimeout));
+    EXPECT_EQ(server_error_user_, QLatin1String(kUserName));
+}
+
+//--------------------------------------------------------------------------------------------------
+// Without a pinned key the client takes the key the host presents (TOFU) and authenticates.
+TEST_F(TcpChannelTest, PasswordMethodPinsHostKeyOnFirstUse)
+{
+    const KeyPair host_key = KeyPair::create(KeyPair::Type::X25519);
+    ASSERT_TRUE(host_key.isValid());
+
+    user_list_->enablePasswordAuth(QLatin1String(kPassword), kAllowedSessionType);
+
+    const quint16 port = startServer("127.0.0.1", host_key.privateKey());
+    ASSERT_NE(port, 0);
+
+    connectClient(port, QLatin1String(kUserName), QLatin1String(kPassword), kAllowedSessionType,
+                  ClientAuthenticator::PasswordAuth::HOST_KEY);
+
+    ASSERT_TRUE(client_authenticated_.wait(1, kWaitTimeout));
+    ASSERT_TRUE(accepted_.wait(1, kWaitTimeout));
+}
+
+//--------------------------------------------------------------------------------------------------
+// A host that presents a key different from the one the client pinned is refused.
+TEST_F(TcpChannelTest, PasswordMethodRefusesKeyMismatch)
+{
+    const KeyPair host_key = KeyPair::create(KeyPair::Type::X25519);
+    const KeyPair other_key = KeyPair::create(KeyPair::Type::X25519);
+    ASSERT_TRUE(host_key.isValid());
+    ASSERT_TRUE(other_key.isValid());
+
+    user_list_->enablePasswordAuth(QLatin1String(kPassword), kAllowedSessionType);
+
+    const quint16 port = startServer("127.0.0.1", host_key.privateKey());
+    ASSERT_NE(port, 0);
+
+    connectClient(port, QLatin1String(kUserName), QLatin1String(kPassword), kAllowedSessionType,
+                  ClientAuthenticator::PasswordAuth::HOST_KEY, other_key.publicKey());
+
+    ASSERT_TRUE(client_error_.wait(1, kWaitTimeout));
+    EXPECT_EQ(client_error_code_, TcpChannel::ErrorCode::ACCESS_DENIED);
+    EXPECT_EQ(accepted_.count(), 0);
+}
+
+//--------------------------------------------------------------------------------------------------
+// An unknown user is refused with the same code as a wrong password, so the reply does not tell the
+// two apart.
+TEST_F(TcpChannelTest, PasswordMethodRefusesUnknownUserLikeWrongPassword)
+{
+    const KeyPair host_key = KeyPair::create(KeyPair::Type::X25519);
+    ASSERT_TRUE(host_key.isValid());
+
+    user_list_->enablePasswordAuth(QLatin1String(kPassword), kAllowedSessionType);
+
+    const quint16 port = startServer("127.0.0.1", host_key.privateKey());
+    ASSERT_NE(port, 0);
+
+    connectClient(port, "nobody", QLatin1String(kPassword), kAllowedSessionType,
+                  ClientAuthenticator::PasswordAuth::HOST_KEY, host_key.publicKey());
+
+    ASSERT_TRUE(client_error_.wait(1, kWaitTimeout));
+    EXPECT_EQ(client_error_code_, TcpChannel::ErrorCode::ACCESS_DENIED);
+    EXPECT_EQ(accepted_.count(), 0);
+
+    // An unknown login is named in the log the same way a known one is.
+    ASSERT_TRUE(rejected_.wait(1, kWaitTimeout));
+    EXPECT_EQ(server_error_user_, QStringLiteral("nobody"));
+}
+
+//--------------------------------------------------------------------------------------------------
+// A client that offers the password method against a host that does not support it falls back to
+// SRP instead of failing.
+TEST_F(TcpChannelTest, PasswordOfferFallsBackToSrp)
+{
+    // The server has no password support (the user list returns no resolver).
+    const quint16 port = startServer();
+    ASSERT_NE(port, 0);
+
+    connectClient(port, QLatin1String(kUserName), QLatin1String(kPassword), kAllowedSessionType,
+                  ClientAuthenticator::PasswordAuth::HOST_KEY);
+
+    ASSERT_TRUE(client_authenticated_.wait(1, kWaitTimeout));
+    ASSERT_TRUE(accepted_.wait(1, kWaitTimeout));
 }

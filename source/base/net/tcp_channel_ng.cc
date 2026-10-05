@@ -33,6 +33,7 @@
 #include "base/crypto/stream_encryptor.h"
 #include "base/peer/authenticator.h"
 #include "base/threading/asio_event_dispatcher.h"
+#include "proto/key_exchange.h"
 
 namespace {
 
@@ -548,6 +549,15 @@ void TcpChannelNG::onErrorOccurred(const Location& location, const std::error_co
 //--------------------------------------------------------------------------------------------------
 void TcpChannelNG::onErrorOccurred(const Location& location, ErrorCode error_code)
 {
+    // A password denial is decided by the server, which closes the connection: unlike SRP the key
+    // material is valid, so the client cannot detect it by a decryption failure. The channel
+    // reports it as an access denial, so callers see one code for refused credentials.
+    if (error_code == ErrorCode::REMOTE_HOST_CLOSED && authenticator_ && !authenticated_ &&
+        authenticator_->identify() == proto::key_exchange::IDENTIFY_PASSWORD)
+    {
+        error_code = ErrorCode::ACCESS_DENIED;
+    }
+
     CLOG(TRACE) << "Connection finished:" << error_code << "from" << location;
 
     if (!io_->alive)

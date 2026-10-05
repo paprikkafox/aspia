@@ -284,6 +284,12 @@ void TcpServer::doAccept()
             ScopedQPointer<ServerAuthenticator> authenticator(new ServerAuthenticator());
             authenticator->setUserList(user_list_);
 
+            // A direct connection has no brokered transport, so the password method needs the
+            // host's long-term key to authenticate the host; without one only SRP is offered.
+            authenticator->setPasswordAuth(private_key_.isEmpty()
+                ? ServerAuthenticator::PasswordAuth::DISABLE
+                : ServerAuthenticator::PasswordAuth::HOST_KEY);
+
             if (!private_key_.isEmpty())
             {
                 if (!authenticator->setPrivateKey(private_key_))

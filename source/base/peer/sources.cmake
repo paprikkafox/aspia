@@ -23,6 +23,7 @@ collect_sources(SOURCE_BASE_PEER
     client_authenticator.h
     client_authenticator_legacy.cc
     client_authenticator_legacy.h
+    credential_resolver.h
     host_id.cc
     host_id.h
     relay_peer.cc

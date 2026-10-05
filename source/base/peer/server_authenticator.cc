@@ -29,7 +29,9 @@
 #include "base/crypto/generic_hash.h"
 #include "base/crypto/random.h"
 #include "base/crypto/secure_byte_array.h"
+#include "base/crypto/secure_string.h"
 #include "base/crypto/srp_math.h"
+#include "base/peer/credential_resolver.h"
 #include "proto/key_exchange.h"
 
 namespace {
@@ -56,6 +58,12 @@ void ServerAuthenticator::setUserList(SharedPointer<UserList> user_list)
 {
     user_list_ = std::move(user_list);
     CLOG(TRACE) << "User list is assigned";
+}
+
+//--------------------------------------------------------------------------------------------------
+void ServerAuthenticator::setPasswordAuth(PasswordAuth password_auth)
+{
+    password_auth_ = password_auth;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -178,6 +186,10 @@ void ServerAuthenticator::onReceived(const QByteArray& buffer)
             onClientKeyExchange(buffer);
             break;
 
+        case InternalState::READ_PASSWORD_IDENTIFY:
+            onPasswordIdentify(buffer);
+            break;
+
         case InternalState::READ_SESSION_RESPONSE:
             onSessionResponse(buffer);
             break;
@@ -229,25 +241,15 @@ void ServerAuthenticator::onClientHello(const QByteArray& buffer)
     }
 
     identify_ = client_hello.identify();
-    switch (identify_)
-    {
-        case proto::key_exchange::IDENTIFY_SRP:
-            break;
 
-        case proto::key_exchange::IDENTIFY_ANONYMOUS:
-            // If anonymous method is not allowed.
-            if (anonymous_access_ != AnonymousAccess::ENABLE)
-            {
-                finish(FROM_HERE, ErrorCode::ACCESS_DENIED);
-                return;
-            }
-            break;
+    // The methods the client supports: the capability mask when present, otherwise the single
+    // |identify| value (older clients that do not send the mask).
+    const quint32 client_methods = client_hello.identify_methods() != 0
+        ? client_hello.identify_methods()
+        : (1u << static_cast<quint32>(client_hello.identify()));
 
-        default:
-            // Unsupported identication method.
-            finish(FROM_HERE, ErrorCode::PROTOCOL_ERROR);
-            return;
-    }
+    if (!selectIdentifyMethod(client_methods))
+        return;
 
     QByteArray client_public_key = QByteArray::fromStdString(client_hello.public_key());
     if (client_public_key.isEmpty())
@@ -265,9 +267,16 @@ void ServerAuthenticator::onClientHello(const QByteArray& buffer)
 
     proto::key_exchange::ServerHello server_hello;
 
-    if (identify_ == proto::key_exchange::IDENTIFY_ANONYMOUS)
+    // ANONYMOUS and the password method over a direct connection authenticate the host with its
+    // long-term key. Over a brokered transport the password method uses ephemeral key agreement
+    // instead: the relay authenticates the transport.
+    const bool use_host_key = identify_ == proto::key_exchange::IDENTIFY_ANONYMOUS ||
+        (identify_ == proto::key_exchange::IDENTIFY_PASSWORD &&
+         password_auth_ == PasswordAuth::HOST_KEY);
+
+    if (use_host_key)
     {
-        // ANONYMOUS: long-term server keypair derives shared with client's ephemeral pubkey.
+        // Long-term server keypair derives the shared secret with the client's ephemeral key.
         // Order: x25519_secret || ClientHello || ServerHello.
         if (!key_pair_.isValid())
         {
@@ -291,6 +300,12 @@ void ServerAuthenticator::onClientHello(const QByteArray& buffer)
         appendTranscript(x25519_secret.toByteArray());
 
         server_hello.set_iv(encrypt_iv_.toStdString());
+
+        // The password method over a direct connection also carries the host's long-term public key,
+        // so the client can verify it against the pinned key (or pin it on first use).
+        if (identify_ == proto::key_exchange::IDENTIFY_PASSWORD)
+            server_hello.set_public_key(key_pair_.publicKey().toStdString());
+
         appendTranscript(buffer);
     }
     else
@@ -348,6 +363,8 @@ void ServerAuthenticator::onClientHello(const QByteArray& buffer)
         return;
     }
 
+    server_hello.set_identify(identify_);
+
     encryption_ = server_hello.encryption();
 
     QByteArray message = serialize(server_hello);
@@ -376,6 +393,10 @@ void ServerAuthenticator::onClientHello(const QByteArray& buffer)
 
         case proto::key_exchange::IDENTIFY_ANONYMOUS:
             doSessionChallenge();
+            break;
+
+        case proto::key_exchange::IDENTIFY_PASSWORD:
+            internal_state_ = InternalState::READ_PASSWORD_IDENTIFY;
             break;
 
         default:
@@ -521,8 +542,8 @@ void ServerAuthenticator::onIdentify(const QByteArray& buffer)
     CLOG(TRACE) << "Sending: ServerKeyExchange (" << message.size() << ")";
     appendTranscript(message);
 
-    // Encrypted under the ephemeral key. Channel rebuilds its encryptor to the final key on
-    // the next sig_keyChanged (fired after we receive SrpClientKeyExchange).
+    // Encrypted under the ephemeral key. The channel rebuilds its encryptor to the final key on
+    // the next sig_keyChanged, fired after SrpClientKeyExchange is received.
     emit sig_outgoingMessage(message, true);
     internal_state_ = InternalState::READ_CLIENT_KEY_EXCHANGE;
 }
@@ -565,8 +586,9 @@ void ServerAuthenticator::onClientKeyExchange(const QByteArray& buffer)
 
     switch (encryption_)
     {
-        // AES256-GCM require a 256 bit key. Mix the SRP key after CKE - transcript now covers full
-        // handshake plus SRP key - that is the master from which sessionKey() derives per-direction keys.
+        // AES256-GCM requires a 256-bit key. The SRP key is mixed in after ClientKeyExchange, so the
+        // transcript covers the full handshake plus the SRP key, and is the master from which
+        // sessionKey() derives the per-direction keys.
         case proto::key_exchange::ENCRYPTION_AES256_GCM:
             appendTranscript(srp_key.toByteArray());
             break;
@@ -701,4 +723,115 @@ QByteArray ServerAuthenticator::createSrpKey()
     }
 
     return server_key.toByteArray();
+}
+
+//--------------------------------------------------------------------------------------------------
+bool ServerAuthenticator::selectIdentifyMethod(quint32 client_methods)
+{
+    const bool client_srp =
+        (client_methods & (1u << static_cast<quint32>(proto::key_exchange::IDENTIFY_SRP))) != 0;
+    const bool client_anonymous =
+        (client_methods & (1u << static_cast<quint32>(proto::key_exchange::IDENTIFY_ANONYMOUS))) != 0;
+    const bool client_password =
+        (client_methods & (1u << static_cast<quint32>(proto::key_exchange::IDENTIFY_PASSWORD))) != 0;
+
+    // The password method needs the host to support credentials (LDAP configured).
+    if (client_password && password_auth_ != PasswordAuth::DISABLE && user_list_)
+        credential_resolver_ = user_list_->createCredentialResolver();
+
+    if (credential_resolver_)
+    {
+        identify_ = proto::key_exchange::IDENTIFY_PASSWORD;
+        CLOG(TRACE) << "Identify method: PASSWORD";
+        return true;
+    }
+
+    if (client_srp)
+    {
+        identify_ = proto::key_exchange::IDENTIFY_SRP;
+        CLOG(TRACE) << "Identify method: SRP";
+        return true;
+    }
+
+    if (client_anonymous && anonymous_access_ == AnonymousAccess::ENABLE)
+    {
+        identify_ = proto::key_exchange::IDENTIFY_ANONYMOUS;
+        CLOG(TRACE) << "Identify method: ANONYMOUS";
+        return true;
+    }
+
+    CLOG(ERROR) << "No common identification method";
+    finish(FROM_HERE, ErrorCode::ACCESS_DENIED);
+    return false;
+}
+
+//--------------------------------------------------------------------------------------------------
+void ServerAuthenticator::onPasswordIdentify(const QByteArray& buffer)
+{
+    CLOG(TRACE) << "Received: PasswordIdentify (" << buffer.size() << ")";
+
+    if (!credential_resolver_)
+    {
+        finish(FROM_HERE, ErrorCode::UNKNOWN_ERROR);
+        return;
+    }
+
+    proto::key_exchange::PasswordIdentify identify;
+    if (!parse(buffer, &identify))
+    {
+        finish(FROM_HERE, ErrorCode::PROTOCOL_ERROR);
+        return;
+    }
+
+    const QString user_name = QString::fromStdString(identify.username());
+
+    // The LDAP path accepts logins that the local SRP path would reject, such as a backslash in
+    // DOMAIN\user, so only the size and emptiness are checked.
+    if (user_name.isEmpty() || user_name.size() > static_cast<qsizetype>(User::kMaxUserNameLength))
+    {
+        finish(FROM_HERE, ErrorCode::PROTOCOL_ERROR);
+        return;
+    }
+
+    // Record the attempted login before it is verified. A refused attempt must still reach the
+    // security log with the name the client offered, as on the SRP path in onIdentify(); the name
+    // is read back by TcpChannelNG::onErrorOccurred().
+    user_name_ = identify.username();
+
+    // Bind the credentials message into the transcript and switch to the final session key; the
+    // message itself arrived encrypted under the key established at ServerHello.
+    appendTranscript(buffer);
+    setSessionKeyReady();
+
+    const SecureByteArray raw_password(QByteArray::fromStdString(identify.password()));
+    const SecureString password = SecureString::fromUtf8(raw_password);
+
+    connect(credential_resolver_.get(), &CredentialResolver::sig_resolved, this,
+            &ServerAuthenticator::onCredentialsResolved);
+    connect(credential_resolver_.get(), &CredentialResolver::sig_denied, this,
+            &ServerAuthenticator::onCredentialsDenied);
+
+    credential_resolver_->resolve(user_name, password);
+}
+
+//--------------------------------------------------------------------------------------------------
+void ServerAuthenticator::onCredentialsResolved(const QString& user_name, quint32 sessions)
+{
+    if (state() != State::PENDING)
+        return;
+
+    user_name_ = user_name.toStdString();
+    user_id_ = 0;
+    session_types_ = sessions;
+
+    doSessionChallenge();
+}
+
+//--------------------------------------------------------------------------------------------------
+void ServerAuthenticator::onCredentialsDenied()
+{
+    if (state() != State::PENDING)
+        return;
+
+    finish(FROM_HERE, ErrorCode::ACCESS_DENIED);
 }

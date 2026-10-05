@@ -28,6 +28,9 @@ message HostBlob
     string address  = 1;
     string username = 2;
     string password = 3;
+    // The host's long-term public key learned on the first connection (TOFU). Empty for a record
+    // that has never connected directly or that predates the field.
+    bytes public_key = 4;
 }
 
 // The encrypted column of a router record.

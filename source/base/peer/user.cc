@@ -78,6 +78,35 @@ bool User::isValidUserName(const QString& username)
 
 //--------------------------------------------------------------------------------------------------
 // static
+bool User::isValidLogin(const QString& login)
+{
+    const qsizetype length = login.length();
+
+    if (!length || length > kMaxUserNameLength)
+        return false;
+
+    for (qsizetype i = 0; i < length; ++i)
+    {
+        const QChar character = login[i];
+
+        if (character.isLetterOrNumber() ||
+            character == '.' ||
+            character == '_' ||
+            character == '-' ||
+            character == '@' ||
+            character == '\\')
+        {
+            continue;
+        }
+
+        return false;
+    }
+
+    return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+// static
 bool User::isValidPassword(const SecureString& password)
 {
     qsizetype length = password.toString().length();

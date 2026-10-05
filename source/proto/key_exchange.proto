@@ -54,10 +54,16 @@ package proto.key_exchange;
 //    |AuthorizationResponse|. Field |session_type| contains the selected session type.
 //
 
+// Identification (authentication) methods. The value is also the bit index in the ClientHello
+// capability mask |identify_methods|: bit (1 << method) is set when the client supports the method.
 enum Identify
 {
     IDENTIFY_SRP       = 0;
     IDENTIFY_ANONYMOUS = 1;
+
+    // The client sends its credentials (PasswordIdentify) protected by the handshake key, so the
+    // server can validate them against LDAP (with a local fallback).
+    IDENTIFY_PASSWORD  = 2;
 }
 
 enum Encryption
@@ -75,6 +81,11 @@ message ClientHello
     bytes public_key     = 3;
     bytes iv             = 4;
     peer.Version version = 5; // Deprecated.
+
+    // Capability mask of the Identify methods the client supports (bit (1 << method)). Older clients
+    // leave it zero and the server falls back to the single |identify| value. New clients keep
+    // |identify| = IDENTIFY_SRP (so an old server still works) and list their capabilities here.
+    uint32 identify_methods = 6;
 }
 
 // Server to client.
@@ -83,6 +94,10 @@ message ServerHello
     Encryption encryption = 1;
     bytes iv              = 2;
     bytes public_key      = 3;
+
+    // The method the server selected among the client's advertised capabilities. Older clients
+    // ignore the field and keep using the method they requested.
+    Identify identify     = 4;
 }
 
 // Server to client (legacy protocol). Peers older than 3.0.0 require the server version in this
@@ -98,6 +113,16 @@ message ServerHelloLegacy
 message SrpIdentify
 {
     string username = 1;
+}
+
+// Client to server (IDENTIFY_PASSWORD). Credentials travel inside a message encrypted with the
+// handshake key (the ephemeral X25519 shared secret), never in the clear. |domain| is optional and
+// may hold a Windows/AD domain for DOMAIN\user or user@domain logins.
+message PasswordIdentify
+{
+    string domain   = 1;
+    string username = 2;
+    string password = 3;
 }
 
 // Server to client.
