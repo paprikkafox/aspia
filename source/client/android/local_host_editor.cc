@@ -321,10 +321,9 @@ void LocalHostEditor::onSaveClicked()
     const QString username = edit_username_->text();
     const QString password = edit_password_->text();
 
-    if (!username.isEmpty() && !User::isValidUserName(username))
+    if (!username.isEmpty() && !User::isValidLogin(username))
     {
-        showError(tr("The user name can not be empty and can contain only alphabet characters,"
-                     " numbers and \"_\", \"-\", \".\" characters."));
+        showError(tr("An invalid user name was entered."));
         edit_username_->setFocus();
         edit_username_->selectAll();
         return;
@@ -346,6 +345,15 @@ void LocalHostEditor::onSaveClicked()
     data.setUsername(username);
     data.setPassword(SecureString(password));
     data.setComment(edit_comment_->text());
+
+    // The pinned host key learned on the first connection is kept in the record. The editor
+    // rebuilds the record from the fields it shows, so the key is carried over and is not lost.
+    if (entry_id_ >= 0)
+    {
+        LocalHostConfig stored;
+        if (Database::instance().findLocalHost(entry_id_, &stored) == Database::FindResult::FOUND)
+            data.setHostPublicKey(stored.hostPublicKey());
+    }
 
     Database& db = Database::instance();
     const bool saved = (entry_id_ < 0) ? db.addLocalHost(data) : db.modifyLocalHost(data);

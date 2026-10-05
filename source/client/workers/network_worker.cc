@@ -426,6 +426,21 @@ void NetworkWorker::startConnection()
         auth->setDisplayName(session_state_->displayName());
     };
 
+    // A direct connection may use the password (LDAP) method only when the host proves itself with
+    // its long-term key. The key is pinned on first use by the owner and reused afterwards, so the
+    // host is authenticated before the password reaches it.
+    auto setupDirectPasswordAuth = [this](ClientAuthenticator* auth)
+    {
+        auth->setPasswordAuth(ClientAuthenticator::PasswordAuth::HOST_KEY);
+
+        const QByteArray pinned_key = session_state_->host().hostPublicKey();
+        if (!pinned_key.isEmpty())
+            auth->setPeerPublicKey(pinned_key);
+
+        connect(auth, &ClientAuthenticator::sig_hostKeyLearned, this,
+                &NetworkWorker::sig_hostKeyLearned);
+    };
+
     if (session_state_->isConnectionByHostId())
     {
         LOG(INFO) << "Starting RELAY connection";
@@ -467,6 +482,12 @@ void NetworkWorker::startConnection()
         {
             auto* auth = new ClientAuthenticator();
             setupAuthenticator(auth);
+
+            // The brokered transport is authenticated by the relay, so the password (LDAP) method may
+            // be offered. Direct connections keep the default DISABLE until a trusted host key is
+            // available.
+            auth->setPasswordAuth(ClientAuthenticator::PasswordAuth::EPHEMERAL);
+
             relay_authenticator = auth;
         }
 
@@ -502,6 +523,8 @@ void NetworkWorker::startConnection()
             {
                 auto* auth = new ClientAuthenticator();
                 setupAuthenticator(auth);
+                setupDirectPasswordAuth(auth);
+
                 tcp_channel_ = new TcpChannelNG(auth, this);
             }
         }
@@ -509,6 +532,7 @@ void NetworkWorker::startConnection()
         {
             auto* auth = new ClientAuthenticator();
             setupAuthenticator(auth);
+            setupDirectPasswordAuth(auth);
             tcp_channel_ = new TcpChannelNG(auth, this);
         }
 

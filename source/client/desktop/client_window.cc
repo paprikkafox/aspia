@@ -358,6 +358,33 @@ void ClientWindow::onNetworkStatusChanged(NetworkWorker::Status status, const QV
 }
 
 //--------------------------------------------------------------------------------------------------
+void ClientWindow::onHostKeyLearned(const QByteArray& public_key)
+{
+    // A direct password handshake pinned the host key on first use. Store it in the address book so
+    // later connections verify the same host; a host of a router has no record of its own to hold it.
+    if (!session_state_ || public_key.isEmpty())
+        return;
+
+    const qint64 entry_id = session_state_->host().entryId();
+    if (entry_id <= 0)
+        return;
+
+    Database& db = Database::instance();
+
+    LocalHostConfig local_host;
+    const Database::FindResult found = db.findLocalHost(entry_id, &local_host);
+    if (found != Database::FindResult::FOUND)
+    {
+        LOG(ERROR) << "Unable to read the host record to store its key (result" << found << ")";
+        return;
+    }
+
+    local_host.setHostPublicKey(public_key);
+    if (!db.modifyLocalHost(local_host))
+        LOG(ERROR) << "Unable to store the key of the host";
+}
+
+//--------------------------------------------------------------------------------------------------
 void ClientWindow::onNetworkConnected()
 {
     if (session_keeper_)
@@ -624,6 +651,9 @@ void ClientWindow::startNewSession()
             Qt::QueuedConnection);
 
     connect(network_worker_, &NetworkWorker::sig_statusChanged, this, &ClientWindow::onNetworkStatusChanged,
+            Qt::QueuedConnection);
+
+    connect(network_worker_, &NetworkWorker::sig_hostKeyLearned, this, &ClientWindow::onHostKeyLearned,
             Qt::QueuedConnection);
 
     worker_manager_->start();

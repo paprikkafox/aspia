@@ -200,6 +200,12 @@ public:
     const SecureString& password() const { return password_; }
     void setPassword(const SecureString& value) { password_ = value; }
 
+    // The host's long-term public key learned on the first direct connection (TOFU). A later direct
+    // connection verifies the host against it, so the host proves the same identity before the
+    // password reaches it. Empty until the first successful direct connection.
+    const QByteArray& hostPublicKey() const { return host_public_key_; }
+    void setHostPublicKey(const QByteArray& value) { host_public_key_ = value; }
+
     // The sealed column for database I/O. See RouterConfig for what the two answer.
     std::optional<QByteArray> encryptedData() const;
     bool setEncryptedData(const QByteArray& blob);
@@ -218,6 +224,7 @@ private:
     QString address_;
     QString username_;
     SecureString password_;
+    QByteArray host_public_key_;
 };
 
 class LocalGroupConfig final
@@ -323,6 +330,11 @@ public:
     const SecureString& password() const { return password_; }
     void setPassword(const SecureString& value) { password_ = value; }
 
+    // The host's pinned long-term public key, taken from the record the connection was built from.
+    // Empty for a host that has never connected directly and for a host of a router.
+    const QByteArray& hostPublicKey() const { return host_public_key_; }
+    void setHostPublicKey(const QByteArray& value) { host_public_key_ = value; }
+
     bool isPortable() const { return portable_; }
     void setPortable(bool portable) { portable_ = portable; }
 
@@ -333,6 +345,7 @@ private:
     QString name_;
     QString username_;
     SecureString password_;
+    QByteArray host_public_key_;
     bool portable_ = false;
 };
 

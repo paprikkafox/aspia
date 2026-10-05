@@ -81,11 +81,9 @@ void CredentialDialog::onButtonBoxClicked(QAbstractButton* button)
         return;
     }
 
-    if (!User::isValidUserName(ui->edit_username->text()))
+    if (!User::isValidLogin(ui->edit_username->text()))
     {
-        MsgBox::warning(this,
-            tr("The user name can not be empty and can contain only"
-               " alphabet characters, numbers and \"_\", \"-\", \".\" characters."));
+        MsgBox::warning(this, tr("An invalid user name was entered."));
         ui->edit_username->setFocus();
         ui->edit_username->selectAll();
         return;

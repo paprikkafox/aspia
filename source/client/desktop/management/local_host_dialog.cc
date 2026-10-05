@@ -171,11 +171,9 @@ void LocalHostDialog::onButtonBoxClicked(QAbstractButton* button)
     const QString username = ui->edit_username->text();
     const SecureString password = ui->edit_password->password();
 
-    if (!username.isEmpty() && !User::isValidUserName(username))
+    if (!username.isEmpty() && !User::isValidLogin(username))
     {
-        MsgBox::warning(this,
-            tr("The user name can not be empty and can contain only"
-               " alphabet characters, numbers and \"_\", \"-\", \".\" characters."));
+        MsgBox::warning(this, tr("An invalid user name was entered."));
         ui->edit_username->setFocus();
         ui->edit_username->selectAll();
         return;
@@ -230,6 +228,19 @@ void LocalHostDialog::onButtonBoxClicked(QAbstractButton* button)
     host.setUsername(username);
     host.setPassword(password);
     host.setComment(ui->edit_comment->toPlainText());
+
+    // The pinned host key learned on the first connection is kept in the record. The dialog
+    // rebuilds the record from the fields it shows, so the key is carried over unless the user
+    // chose to forget it.
+    if (entry_id_ != -1)
+    {
+        LocalHostConfig stored;
+        if (Database::instance().findLocalHost(entry_id_, &stored) == Database::FindResult::FOUND &&
+            !ui->checkbox_forget_host_key->isChecked())
+        {
+            host.setHostPublicKey(stored.hostPublicKey());
+        }
+    }
 
     Database& db = Database::instance();
 
@@ -361,6 +372,9 @@ void LocalHostDialog::onLoadData()
 
         group_id_ = host.groupId();
         selected_router_id = host.routerId();
+
+        // Only a host that has connected directly has a key to forget.
+        ui->checkbox_forget_host_key->setVisible(!host.hostPublicKey().isEmpty());
     }
 
     if (selected_router_id != 0)

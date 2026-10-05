@@ -112,6 +112,16 @@
        </property>
       </widget>
      </item>
+     <item row="8" column="0" colspan="2">
+      <widget class="QCheckBox" name="checkbox_forget_host_key">
+       <property name="visible">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Forget the saved host key</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>

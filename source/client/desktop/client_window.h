@@ -149,6 +149,7 @@ private slots:
     void onDragPoll();
     void onNetworkStatusChanged(NetworkWorker::Status status, const QVariant& data);
     void onNetworkConnected();
+    void onHostKeyLearned(const QByteArray& public_key);
 
 private:
     void saveHostCredentials(const HostConfig& host, qint64 credential_id);

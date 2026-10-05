@@ -249,6 +249,8 @@ std::optional<QByteArray> LocalHostConfig::encryptedData() const
     const SecureByteArray password = password_.toUtf8();
     data.set_password(password.constData(), static_cast<size_t>(password.size()));
 
+    data.set_public_key(host_public_key_.constData(), static_cast<size_t>(host_public_key_.size()));
+
     std::optional<QByteArray> sealed = sealMessage(data, kLocalHostsAad);
 
     memZero(data.mutable_address());
@@ -264,6 +266,7 @@ bool LocalHostConfig::setEncryptedData(const QByteArray& blob)
     address_.clear();
     username_.clear();
     password_.clear();
+    host_public_key_.clear();
 
     if (blob.isEmpty())
         return true;
@@ -275,6 +278,7 @@ bool LocalHostConfig::setEncryptedData(const QByteArray& blob)
     address_ = QString::fromStdString(data.address());
     username_ = QString::fromStdString(data.username());
     password_ = toSecureString(data.password());
+    host_public_key_ = QByteArray::fromStdString(data.public_key());
 
     memZero(data.mutable_address());
     memZero(data.mutable_username());
@@ -347,6 +351,7 @@ HostConfig HostConfig::forLocalHost(const LocalHostConfig& host)
     config.setName(host.name());
     config.setUsername(host.username());
     config.setPassword(host.password());
+    config.setHostPublicKey(host.hostPublicKey());
     return config;
 }
 

@@ -89,6 +89,10 @@ public slots:
 
 signals:
     void sig_statusChanged(NetworkWorker::Status status, const QVariant& data = QVariant());
+
+    // The host's long-term key was learned during a direct password handshake (TOFU). The owner
+    // stores it in the address book, so later connections verify the same host.
+    void sig_hostKeyLearned(const QByteArray& public_key);
     void sig_channel_0(const QByteArray& buffer);
     void sig_channel_1(const QByteArray& buffer);
     void sig_channel_2(const QByteArray& buffer);

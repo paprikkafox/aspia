@@ -757,6 +757,45 @@ TEST_F(DatabaseTest, EncryptedDataSurvivesARoundTrip)
 }
 
 //--------------------------------------------------------------------------------------------------
+// The public key of a host is pinned on the first direct connection and has to survive the trip
+// through the sealed column, so that a later connection can verify the host against it. A host that
+// has never connected carries no key, and editing the record does not lose the one it has.
+TEST_F(DatabaseTest, PinnedHostKeySurvivesARoundTrip)
+{
+    const qint64 group = addGroup("group", 0);
+
+    LocalHostConfig never_connected;
+    never_connected.setName("never-connected");
+    never_connected.setAddress("192.168.0.1");
+    never_connected.setGroupId(group);
+    ASSERT_TRUE(db_.addLocalHost(never_connected));
+
+    LocalHostConfig pinned;
+    pinned.setName("pinned");
+    pinned.setAddress("192.168.0.1");
+    pinned.setGroupId(group);
+    pinned.setHostPublicKey(QByteArrayLiteral("a pinned public key"));
+    ASSERT_TRUE(db_.addLocalHost(pinned));
+
+    const std::optional<LocalHostConfig> stored_without = findLocalHost(db_, never_connected.id());
+    ASSERT_TRUE(stored_without.has_value());
+    EXPECT_TRUE(stored_without->hostPublicKey().isEmpty());
+
+    const std::optional<LocalHostConfig> stored_with = findLocalHost(db_, pinned.id());
+    ASSERT_TRUE(stored_with.has_value());
+    EXPECT_EQ(stored_with->hostPublicKey(), QByteArrayLiteral("a pinned public key"));
+
+    LocalHostConfig edited = *stored_with;
+    edited.setName("renamed");
+    ASSERT_TRUE(db_.modifyLocalHost(edited));
+
+    const std::optional<LocalHostConfig> after_edit = findLocalHost(db_, pinned.id());
+    ASSERT_TRUE(after_edit.has_value());
+    EXPECT_EQ(after_edit->name(), QString("renamed"));
+    EXPECT_EQ(after_edit->hostPublicKey(), QByteArrayLiteral("a pinned public key"));
+}
+
+//--------------------------------------------------------------------------------------------------
 // A host and a router number their fields the same way, so a router column would parse as a host one
 // and hand out an address that was never a host. The seal names the table it was made for, and a
 // column carried across tables does not open.

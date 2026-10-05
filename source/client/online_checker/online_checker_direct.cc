@@ -98,6 +98,16 @@ void OnlineCheckerDirect::Instance::start()
     authenticator->setSessionType(proto::peer::SESSION_TYPE_DESKTOP);
     authenticator->setProbe(true);
 
+    // A login may have no local account (an LDAP one, for instance), so the password method
+    // is offered as a real direct connection offers it: the host is authenticated by its long-term
+    // key, against the pinned key when the address book has one, before the password reaches it.
+    // SRP alone cannot serve the login, so with the method disabled it would be reported offline.
+    authenticator->setPasswordAuth(ClientAuthenticator::PasswordAuth::HOST_KEY);
+
+    const QByteArray pinned_key = host_.hostPublicKey();
+    if (!pinned_key.isEmpty())
+        authenticator->setPeerPublicKey(pinned_key);
+
     tcp_channel_ = new TcpChannelNG(authenticator, this);
 
     connect(tcp_channel_, &TcpChannel::sig_authenticated, this, &Instance::onTcpAuthenticated);
