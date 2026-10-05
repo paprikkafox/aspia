@@ -32,6 +32,8 @@
 #include "base/net/address.h"
 #include "base/net/tcp_channel.h"
 #include "base/net/tcp_server.h"
+#include "base/crypto/key_pair.h"
+#include "base/crypto/secure_byte_array.h"
 #include "host/credentials.h"
 #include "host/database.h"
 #include "host/desktop_client.h"
@@ -180,6 +182,23 @@ void ServiceWorker::onPrepare()
     tcp_server_->setMaxPendingConnections(kHostMaxPendingConnections);
     tcp_server_->setMaxConnectionsPerMinute(kHostMaxConnectionsPerMinute);
     tcp_server_->setUserList(SharedPointer<UserList>(new HostUserList(db)));
+
+    // The long-term key the host uses to authenticate itself to direct clients (the password / LDAP
+    // method). Generated once and kept, so a client can pin it across connections.
+    QByteArray peer_private_key = db.peerPrivateKey();
+    if (peer_private_key.isEmpty())
+    {
+        const KeyPair key_pair = KeyPair::create(KeyPair::Type::X25519);
+        if (key_pair.isValid())
+        {
+            peer_private_key = key_pair.privateKey().toByteArray();
+            if (!peer_private_key.isEmpty())
+                db.setPeerPrivateKey(peer_private_key);
+        }
+    }
+
+    if (!peer_private_key.isEmpty())
+        tcp_server_->setPrivateKey(SecureByteArray(peer_private_key));
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -230,6 +249,12 @@ void ServiceWorker::onStop()
     desktop_manager_.reset();
     user_session_.reset();
     settings_watcher_.reset();
+#if defined(Q_OS_WINDOWS)
+    // The credentials provider owns an IPC server, whose asio objects are bound to this thread's
+    // io_context as well, so it is released the same way as the rest: here, in the thread that owns
+    // the io_context, and not later when the worker object is destroyed and the thread is gone.
+    credentials_.reset();
+#endif // defined(Q_OS_WINDOWS)
 }
 
 //--------------------------------------------------------------------------------------------------

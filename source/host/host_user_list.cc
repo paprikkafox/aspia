@@ -19,6 +19,7 @@
 #include "host/host_user_list.h"
 
 #include "host/database.h"
+#include "host/ldap_credential_resolver.h"
 
 //--------------------------------------------------------------------------------------------------
 HostUserList::HostUserList(Database& database)
@@ -56,4 +57,18 @@ void HostUserList::setSeedKey(const QByteArray& seed_key)
 void HostUserList::setOneTimeUser(const User& user)
 {
     one_time_user_ = user;
+}
+
+//--------------------------------------------------------------------------------------------------
+std::unique_ptr<CredentialResolver> HostUserList::createCredentialResolver()
+{
+    // The password method exists for the directory. Without LDAP a local account is checked with SRP,
+    // which never lets the password leave the client, so a host with LDAP off must not offer the
+    // password method at all - otherwise every connection would downgrade SRP to a plain password.
+    if (!database_.ldapConfig().enabled)
+        return nullptr;
+
+    // The list is passed so the local fallback sees the same users the SRP path sees, the one-time
+    // user among them.
+    return std::make_unique<HostLdapCredentialResolver>(database_, *this);
 }

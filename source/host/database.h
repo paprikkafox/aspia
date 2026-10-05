@@ -119,6 +119,11 @@ public:
     QByteArray hostKey() const;
     bool setHostKey(const QByteArray& key);
 
+    // Long-term private key the host uses to authenticate itself to direct clients (the password
+    // method, IDENTIFY_PASSWORD). Stored in the root-only database like the other secrets.
+    QByteArray peerPrivateKey() const;
+    bool setPeerPrivateKey(const QByteArray& key);
+
     // Password protection.
     PasswordProtection passwordProtectionState() const;
     bool setPassword(const SecureString& password);
@@ -129,8 +134,68 @@ public:
     QByteArray passwordHashSalt() const;
     bool setPasswordHashSalt(const QByteArray& salt);
 
+    // LDAP authentication.
+    enum class LdapSecurity
+    {
+        PLAIN = 0,   // No transport encryption.
+        LDAPS = 1,   // TLS from the first byte.
+        STARTTLS = 2 // Plaintext, then upgraded via StartTLS.
+    };
+    Q_ENUM(LdapSecurity)
+
+    struct LdapConfig
+    {
+        bool enabled = false;
+        QString server;
+        quint16 port = 636;
+        LdapSecurity security = LdapSecurity::STARTTLS;
+        bool verify_peer = true;
+        QString ca_certificate;      // The certificate of the CA, PEM encoded.
+        QString bind_dn;
+        QString bind_password;
+        QString base_dn;             // User search base.
+        QString user_filter;         // RFC 4515 filter with a %1 placeholder for the login.
+        QString user_name_attribute; // Attribute that carries the login (e.g. sAMAccountName).
+        bool group_nested = true;    // Use the AD matching rule in chain for nested groups.
+        QString group_base_dn;
+        QString group_filter;
+        QString group_attribute;     // The attribute that names a group (cn).
+        quint32 default_sessions = 0;
+        bool deny_if_unmapped = true;
+        bool allow_local_fallback = true; // LDAP preferred vs LDAP only.
+        int cache_ttl = 60; // Seconds a resolution is cached for; 0 disables the cache.
+    };
+
+    // A group or user mapping: how the matching identity maps to the host permission bitmask.
+    struct LdapMapping
+    {
+        qint64 entry_id = 0;
+        QString name;      // Group DN/name, or LDAP user name.
+        quint32 sessions = 0;
+        quint32 flags = 0; // User::Flags.
+    };
+
+    LdapConfig ldapConfig() const;
+    bool setLdapConfig(const LdapConfig& config);
+
+    QVector<LdapMapping> ldapGroups() const;
+    bool addLdapGroup(const LdapMapping& mapping);
+    bool removeLdapGroup(qint64 entry_id);
+    bool replaceLdapGroups(const QVector<LdapMapping>& mappings);
+
+    QVector<LdapMapping> ldapUsers() const;
+    bool addLdapUser(const LdapMapping& mapping);
+    bool removeLdapUser(qint64 entry_id);
+    bool replaceLdapUsers(const QVector<LdapMapping>& mappings);
+
 private:
+    friend class DatabaseTestPeer;
+
     Database() = default;
+
+    // Points the per-thread connection of instance() at |file_path| and closes the previous
+    // connection, so a test works on a database of its own instead of the host database.
+    static void setFilePathForTesting(const QString& file_path);
 
     bool open(const QString& file_path);
     bool openDatabase();

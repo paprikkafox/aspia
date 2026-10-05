@@ -19,8 +19,11 @@
 #ifndef HOST_HOST_USER_LIST_H
 #define HOST_HOST_USER_LIST_H
 
+#include <memory>
+
 #include "base/peer/user_list.h"
 
+class CredentialResolver;
 class Database;
 
 class HostUserList final : public UserList
@@ -35,6 +38,7 @@ public:
     QByteArray seedKey() const final;
     void setSeedKey(const QByteArray& seed_key) final;
     void setOneTimeUser(const User& user) final;
+    std::unique_ptr<CredentialResolver> createCredentialResolver() final;
 
 private:
     Database& database_;

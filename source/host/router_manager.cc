@@ -570,6 +570,10 @@ void RouterManager::readConnectionOffer(const proto::router::ConnectionOffer& of
     ScopedQPointer<ServerAuthenticator> authenticator(new ServerAuthenticator());
     authenticator->setUserList(user_list_);
 
+    // The brokered transport is authenticated by the relay, so the password method may use the
+    // ephemeral key agreement (the host needs no long-term key).
+    authenticator->setPasswordAuth(ServerAuthenticator::PasswordAuth::EPHEMERAL);
+
     if (!config_->isPortable())
     {
         connect(authenticator.get(), &Authenticator::sig_finished,

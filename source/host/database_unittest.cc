@@ -348,3 +348,108 @@ TEST_F(HostDatabaseTest, ContentsSurviveReopening)
     EXPECT_EQ(reopened->tcpPort(), 9999);
     EXPECT_TRUE(reopened->verifyPassword(kPassword));
 }
+
+//--------------------------------------------------------------------------------------------------
+// The LDAP configuration round-trips through the secure storage; the defaults apply before anything
+// is written.
+TEST_F(HostDatabaseTest, LdapConfigRoundTrip)
+{
+    const Database::LdapConfig defaults = db_->ldapConfig();
+    EXPECT_FALSE(defaults.enabled);
+    EXPECT_EQ(defaults.port, 636);
+    EXPECT_EQ(defaults.security, Database::LdapSecurity::STARTTLS);
+    EXPECT_TRUE(defaults.verify_peer);
+    EXPECT_TRUE(defaults.group_nested);
+    EXPECT_EQ(defaults.user_name_attribute, QStringLiteral("sAMAccountName"));
+    EXPECT_EQ(defaults.group_attribute, QStringLiteral("cn"));
+    EXPECT_TRUE(defaults.deny_if_unmapped);
+    EXPECT_TRUE(defaults.allow_local_fallback);
+    EXPECT_EQ(defaults.cache_ttl, 60);
+
+    Database::LdapConfig config;
+    config.enabled = true;
+    config.server = QStringLiteral("ldap.example.com");
+    config.port = 1389;
+    config.security = Database::LdapSecurity::LDAPS;
+    config.verify_peer = false;
+    config.ca_certificate = QStringLiteral("-----BEGIN CERTIFICATE-----\nMIIB\n-----END CERTIFICATE-----");
+    config.bind_dn = QStringLiteral("cn=service,dc=x");
+    config.bind_password = QStringLiteral("bind-secret");
+    config.base_dn = QStringLiteral("dc=x");
+    config.user_filter = QStringLiteral("(&(objectClass=person)(sAMAccountName=%1))");
+    config.user_name_attribute = QStringLiteral("uid");
+    config.group_nested = false;
+    config.group_base_dn = QStringLiteral("ou=groups,dc=x");
+    config.group_filter = QStringLiteral("(objectClass=group)");
+    config.group_attribute = QStringLiteral("cn");
+    config.default_sessions = 1 | 4;
+    config.deny_if_unmapped = false;
+    config.allow_local_fallback = false;
+    config.cache_ttl = 120;
+
+    ASSERT_TRUE(db_->setLdapConfig(config));
+
+    const Database::LdapConfig loaded = db_->ldapConfig();
+    EXPECT_TRUE(loaded.enabled);
+    EXPECT_EQ(loaded.server, config.server);
+    EXPECT_EQ(loaded.port, config.port);
+    EXPECT_EQ(loaded.security, config.security);
+    EXPECT_FALSE(loaded.verify_peer);
+    EXPECT_EQ(loaded.ca_certificate, config.ca_certificate);
+    EXPECT_EQ(loaded.bind_dn, config.bind_dn);
+    EXPECT_EQ(loaded.bind_password, config.bind_password);
+    EXPECT_EQ(loaded.base_dn, config.base_dn);
+    EXPECT_EQ(loaded.user_filter, config.user_filter);
+    EXPECT_EQ(loaded.user_name_attribute, config.user_name_attribute);
+    EXPECT_FALSE(loaded.group_nested);
+    EXPECT_EQ(loaded.group_base_dn, config.group_base_dn);
+    EXPECT_EQ(loaded.group_filter, config.group_filter);
+    EXPECT_EQ(loaded.group_attribute, config.group_attribute);
+    EXPECT_EQ(loaded.default_sessions, config.default_sessions);
+    EXPECT_FALSE(loaded.deny_if_unmapped);
+    EXPECT_FALSE(loaded.allow_local_fallback);
+    EXPECT_EQ(loaded.cache_ttl, config.cache_ttl);
+}
+
+//--------------------------------------------------------------------------------------------------
+TEST_F(HostDatabaseTest, LdapMappings)
+{
+    Database::LdapMapping group;
+    group.name = QStringLiteral("cn=admins,dc=x");
+    group.sessions = 63;
+    group.flags = User::ENABLED;
+    ASSERT_TRUE(db_->addLdapGroup(group));
+
+    Database::LdapMapping user_mapping;
+    user_mapping.name = QStringLiteral("jdoe");
+    user_mapping.sessions = 1;
+    user_mapping.flags = User::ENABLED;
+    ASSERT_TRUE(db_->addLdapUser(user_mapping));
+
+    const QVector<Database::LdapMapping> groups = db_->ldapGroups();
+    ASSERT_EQ(groups.size(), 1);
+    EXPECT_EQ(groups.at(0).name, group.name);
+    EXPECT_EQ(groups.at(0).sessions, 63u);
+    EXPECT_GT(groups.at(0).entry_id, 0);
+
+    const QVector<Database::LdapMapping> users = db_->ldapUsers();
+    ASSERT_EQ(users.size(), 1);
+    EXPECT_EQ(users.at(0).name, QStringLiteral("jdoe"));
+
+    ASSERT_TRUE(db_->removeLdapGroup(groups.at(0).entry_id));
+    EXPECT_TRUE(db_->ldapGroups().isEmpty());
+
+    ASSERT_TRUE(db_->replaceLdapUsers({ user_mapping }));
+    EXPECT_EQ(db_->ldapUsers().size(), 1);
+}
+
+//--------------------------------------------------------------------------------------------------
+// The host's long-term peer key round-trips through the secure storage.
+TEST_F(HostDatabaseTest, PeerPrivateKeyRoundTrip)
+{
+    EXPECT_TRUE(db_->peerPrivateKey().isEmpty());
+
+    const QByteArray key("\x00\x01\xfe private key", 15);
+    ASSERT_TRUE(db_->setPeerPrivateKey(key));
+    EXPECT_EQ(db_->peerPrivateKey(), key);
+}
