@@ -147,6 +147,7 @@ include(crypto/sources.cmake)
 include(desktop/sources.cmake)
 include(files/sources.cmake)
 include(ipc/sources.cmake)
+include(ldap/sources.cmake)
 include(net/sources.cmake)
 include(peer/sources.cmake)
 include(sql/sources.cmake)
@@ -171,6 +172,7 @@ source_group(crypto FILES ${SOURCE_BASE_CRYPTO} ${SOURCE_BASE_CRYPTO_TESTS})
 source_group(desktop FILES ${SOURCE_BASE_DESKTOP} ${SOURCE_BASE_DESKTOP_TESTS})
 source_group(files FILES ${SOURCE_BASE_FILES} ${SOURCE_BASE_FILES_TESTS})
 source_group(ipc FILES ${SOURCE_BASE_IPC})
+source_group(ldap FILES ${SOURCE_BASE_LDAP} ${SOURCE_BASE_LDAP_TESTS})
 source_group(net FILES ${SOURCE_BASE_NET} ${SOURCE_BASE_NET_TESTS})
 source_group(peer FILES ${SOURCE_BASE_PEER} ${SOURCE_BASE_PEER_TESTS})
 source_group(sql FILES ${SOURCE_BASE_SQL} ${SOURCE_BASE_SQL_TESTS})
@@ -196,6 +198,7 @@ add_library(aspia_base STATIC
     ${SOURCE_BASE_DESKTOP}
     ${SOURCE_BASE_FILES}
     ${SOURCE_BASE_IPC}
+    ${SOURCE_BASE_LDAP}
     ${SOURCE_BASE_LINUX}
     ${SOURCE_BASE_MAC}
     ${SOURCE_BASE_NET}
@@ -257,6 +260,7 @@ add_executable(aspia_base_tests
     ${SOURCE_BASE_CRYPTO_TESTS}
     ${SOURCE_BASE_DESKTOP_TESTS}
     ${SOURCE_BASE_FILES_TESTS}
+    ${SOURCE_BASE_LDAP_TESTS}
     ${SOURCE_BASE_NET_TESTS}
     ${SOURCE_BASE_PEER_TESTS}
     ${SOURCE_BASE_SQL_TESTS}
